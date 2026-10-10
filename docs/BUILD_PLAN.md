@@ -4,12 +4,30 @@ Working document for turning the Stitch-generated static prototype into a real t
 Recorded 2026-10-11. Supersedes nothing; complements [ACTION_PLAN.md](../ACTION_PLAN.md),
 which remains the source for provider research and acceptance checks C1–C18.
 
+### Implementation status (2026-10-11)
+
+- **Foundation and fixture-backed web app are implemented.** The nine workspace surfaces
+  render session data; session creation/library, uploads, gap write-back, search, SSE updates,
+  Mermaid SVG/source downloads and ZIP export use the local API.
+- **Provider adapters are implemented but not live-smoke-tested here.** Batch Scribe v2,
+  Gemini synthesis, EXIF and Git ingestion are wired. Add the keys to `.env` to use them.
+- **Realtime transport is wired.** The server mints one-use Scribe tokens; browser AudioWorklet
+  converts mic input to 16 kHz PCM; raw provider events are appended before transcript
+  processing. Live idea synthesis is debounced and appends graph history when Gemini is
+  configured. Provider-account audio verification remains unrun because this environment has
+  no provider credentials.
+- **Spoken gap answers are wired.** The browser records an answer; the server transcribes it
+  with batch Scribe, retains raw response/audio, and stores the transcript as evidence before
+  applying structured write-back.
+- **Mock/API verification passed:** gap write-back, raw live-event ingestion, fixture mock run,
+  search and ZIP export. `npm run lint`, `npm test` and `npm run build` are the current checks.
+
 Two decisions in ACTION_PLAN §3 are amended here, deliberately:
 
 | ACTION_PLAN §3 | This plan | Why |
 | --- | --- | --- |
 | Language: Python, FastAPI | **Node + Express + TypeScript** | One language across the stack; the session/evidence/gap model is defined once in `shared/` and typed on both sides. The repo scaffold was already Node. |
-| Gap interview: text questions for v1 | Text first, spoken answers in M4 | Unchanged in spirit; the UI already has a "record spoken answer" affordance. |
+| Gap interview: text questions for v1 | Typed and spoken answers | Spoken answers use batch Scribe and become their own voice evidence item. |
 
 Everything else in §3 stands: Gemini Developer API with `gemma-4-26b-a4b-it`, ElevenLabs
 Scribe v2 for recorded audio, Scribe v2 Realtime for live capture, filesystem output
@@ -134,7 +152,7 @@ data/sessions/<id>/
     graph.json          fact-sheet nodes and edges
     diagrams/*.mmd      canonical Mermaid artifacts
   artifacts/            README.md OBSERVER_NOTES.md BOM.md TROUBLESHOOTING.md GAPS.md
-  bom.json gaps.json incidents.json observations.json measurements.json runs.jsonl
+  bom.json gaps.json incidents.json observations.json readme-prose.json runs.jsonl
 ```
 
 Raw provider output is immutable and written **before** any model work. A Gemma failure
@@ -242,9 +260,11 @@ Speech-to-commit association is not attempted in v1.
   flexbox cards, and silently misaligns the moment node counts change.) Waveform from a real
   `AnalyserNode` instead of `Math.random()`. Ticker from `partial_transcript`. Sidetrack
   markers persist to the session.
-- **System Diagrams** — real mermaid.js. Gemma emits restricted-subset `flowchart` source;
-  `lib/mermaidSubset.ts` parses it back into `HardwareGraph` for provenance hover and counts;
-  `mermaid.parse()` is the authoritative syntax check behind "Syntax Checked";
+- **System Diagrams** — real mermaid.js. Gemma emits structured hardware and idea graphs;
+  the server serializes those sourced nodes/edges into the restricted Mermaid subset, so the
+  model determines the graph while a deterministic serializer guarantees valid syntax.
+  `lib/mermaid.ts` parses the result back for provenance hover and counts;
+  `mermaid.parse()` is the browser's authoritative check behind "Syntax parsed";
   `mermaid.render()` produces a genuine SVG for download. Tuning: `theme: 'base'` with
   `themeVariables` mapped to the palette, `curve: 'basis'`, `htmlLabels: true`, plus a scoped
   CSS layer over `.node rect`, `.edgePath path`, `.cluster rect`, `.edgeLabel` for Space
@@ -351,8 +371,8 @@ one real capture directory produces sourced documentation end to end.
 synthesis, idea-graph operations and history, affinity and unify, live UI wiring. Exit:
 C11–C18 pass and killing Gemini mid-session loses no transcript.
 
-**M4 — Polish.** Spoken gap answers (record → Scribe → resolve → write-back), Mermaid
-theming refinements, cross-session Living Map, `docs/references/` updates.
+**M4 — Polish.** Remaining work: cross-session Living Map and further visual/accessibility
+polish. Mermaid theming, spoken gap answers and curated provider notes are implemented.
 
 ---
 

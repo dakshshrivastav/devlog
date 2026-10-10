@@ -1,6 +1,6 @@
 # Devlog — Action Plan
 
-**Status:** Recorded-session MVP rebuilt from the repository specification; automated checks pass; live provider smoke tests pending.
+**Status:** The Node/TypeScript application foundation, fixture-backed dynamic UI, local API, batch provider adapters, and realtime Scribe transport are implemented. Automated local checks pass; provider-account and browser microphone smoke tests remain pending.
 **Updated:** 2026-10-11
 **Product specification:** [`idea.md`](idea.md)  
 **Implementation prompt:** [`prompt.md`](prompt.md)  
@@ -8,15 +8,15 @@
 
 ## 1. Goal
 
-Build Devlog, a Python application with a web-based interface, that turns a project build session—voice recordings, photos, notes, and Git history—into source-backed documentation, observer notes, Mermaid diagrams, and gap questions. Preserve the raw evidence so generated claims can be checked.
+Build Devlog, a local web application, that turns a project build session—voice recordings, photos, notes, and Git history—into source-backed documentation, observer notes, Mermaid diagrams, and gap questions. Preserve the raw evidence so generated claims can be checked. The current implementation is Node.js + TypeScript; see [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md) for the operative architecture and milestones.
 
 The product's central constraint is trustworthiness: claims, notes, diagram nodes, and links must be traceable to evidence. Unsupported information becomes a question in `GAPS.md`; the model must not invent it.
 
 ## 2. Current project state
 
 - A working application source tree and `.gitignore` now exist.
-- Git repository initialized on `main`; baseline commit `134a91e` and application commit `55c99df` use the planned messages.
-- Automated verification after the rebuild: 14 tests pass; Ruff, compileall, CLI help, local HTTP page, and wheel build pass. No billed provider call or real-media transcription has been run.
+- Git repository initialized on `main`; baseline `f3265fb` and application foundation `d2aa2c2` use the planned messages.
+- Automated verification: strict client/server TypeScript checks, fixture-backed Vitest tests, production Vite build, and local API smoke tests pass. No billed provider call or real microphone/provider run has been performed.
 - Git evidence is read-only: Devlog extracts full commit IDs, author timestamps, and subjects through NUL-delimited `git log` output. It does not rewrite or stage repository history.
 - Existing planning and reference files to preserve:
   - `idea.md`
@@ -29,19 +29,20 @@ The product's central constraint is trustworthiness: claims, notes, diagram node
 
 ## 3. Decisions and constraints recorded so far
 
-### Confirmed
+### Confirmed (current implementation decisions)
 
-- **Language:** Python.
-- **Interface:** web-based.
-- **Primary entry point:** local browser interface, with a thin CLI using the same pipeline.
-- **Web framework:** FastAPI; pipeline logic stays outside route handlers.
-- **Hosted generation:** Gemini Developer API through the official `google-genai` SDK, model `gemma-4-26b-a4b-it`; `GEMMA_MODEL` may override it. Cloud MaaS is separate and unselected.
-- **Local Gemma:** deferred beyond the first release.
-- **ElevenLabs Agents:** deferred; recorded Scribe transcription remains a separate capability.
-- **Gap interview:** text questions for v1; TTS/Agents later.
+- **Language:** TypeScript on Node.js for both frontend-adjacent server code and the API.
+- **Interface:** local browser UI; no CLI is currently in scope.
+- **Web framework:** Express 5; pipeline and provider logic stay outside route handlers.
+- **Frontend:** React 19 + Vite 8 + Tailwind v4, preserving the Stitch editorial visual reference.
+- **Shared contract:** strict zod schemas in `shared/` provide the single source of truth for client and server.
+- **Hosted generation:** Gemini Developer API through `@google/genai`, default `gemma-4-26b-a4b-it`; `GEMMA_MODEL` may override it. Cloud MaaS is unselected.
+- **Speech:** Scribe v2 batch transcription for recorded sessions; Scribe v2 Realtime WebSocket for live sessions. The long-lived key stays server-side and live browser connections use single-use tokens.
+- **Live graph:** Gemma updates an append-only idea graph from committed transcript chunks; server history and current graph state are kept separately.
+- **Gap interview:** typed answers are implemented; spoken gap answers remain a follow-up.
 - **Timeline policy:** timezone-aware items sort by normalized UTC instant; timezone-naive EXIF values remain naive and follow aware instants; untimed evidence follows dated evidence; ties break by stable source ID. Speech-to-commit association is not implemented.
-- **Generated output:** user-selected, outside Devlog's source directory, and not the target Git repository root.
-- **Recorded Mermaid contract:** sourced nodes/arrows in a restricted flowchart subset; live clusters are later scope.
+- **Generated output:** session-local under the ignored `DATA_DIR`, downloadable as a ZIP; never written into the target Git repository automatically.
+- **Mermaid:** sourced hardware/idea graph structures are serialized into a restricted flowchart subset, validated server-side, and rendered by Mermaid.js in the browser.
 - **Documentation locations:**
   - Internal-only reference material and downloaded assets: `/docs/assets/`; add this path to `.gitignore`.
   - Documentation intended for third-party readers: `/docs/`; track it in Git.
@@ -119,7 +120,9 @@ docs/                         # Tracked documentation for third-party readers
 - Preserve and review the existing `docs/google_cloud.md` and `docs/elevenlabs.txt`; incorporate useful canonical links into the curated reference index rather than duplicating the full indexes.
 - Do not commit API keys, `.env` files, private audio/video/photos, personal capture folders, or generated raw transcripts by default. Track only intentionally prepared, license-compatible fixtures.
 
-## 7. MVP implementation roadmap
+## 7. Historical MVP implementation roadmap
+
+The Python/FastAPI roadmap below was the earlier repository specification and is superseded by [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md), which tracks the current Node/TypeScript implementation.
 
 Implement one milestone at a time. After each milestone, report the files/features changed, exact commands/tests run, actual results, and what remains unverified. Do not claim a feature works before running it.
 
