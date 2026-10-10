@@ -1,176 +1,51 @@
-import React, { useState, useMemo } from 'react';
-import { ActiveView } from '../types';
+import { useEffect, useState } from 'react';
+import type { SearchResult } from '../../shared/schema';
+import { api } from '../lib/api';
 
-interface SearchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelectView: (view: ActiveView) => void;
-}
-
-interface SearchItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  icon: string;
-  targetView: ActiveView;
-}
-
-const SEARCH_CATALOG: SearchItem[] = [
-  {
-    id: 's-1',
-    title: 'ESP32 relay trigger spontaneous reboot',
-    subtitle: 'Voice note: 14:02 · pin 5 activates, voltage sags',
-    category: 'Spoken Moment',
-    icon: 'mic',
-    targetView: 'timeline',
-  },
-  {
-    id: 's-2',
-    title: 'Oscilloscope rail sag to 2.65V',
-    subtitle: 'Rigol DS1054Z capture #01 · -650mV brownout drop',
-    category: 'Bench Capture',
-    icon: 'show_chart',
-    targetView: 'troubleshooting',
-  },
-  {
-    id: 's-3',
-    title: '1N4007 Rectifier Diode Installation',
-    subtitle: 'Flyback antiparallel diode clamping inductive kickback',
-    category: 'Hardware Solution',
-    icon: 'shield',
-    targetView: 'living-map',
-  },
-  {
-    id: 's-4',
-    title: 'BME280 Sensor Module (I2C 0x76)',
-    subtitle: 'Environmental barometric telemetry on 3.3V bus',
-    category: 'Bill of Materials',
-    icon: 'inventory_2',
-    targetView: 'bom-and-parts',
-  },
-  {
-    id: 's-5',
-    title: 'fix(firmware): add 15ms software debounce',
-    subtitle: 'Commit c4e12a · Attempted software fix before diode',
-    category: 'Git Commit',
-    icon: 'code',
-    targetView: 'timeline',
-  },
-  {
-    id: 's-6',
-    title: 'Mermaid System Architecture (.mmd)',
-    subtitle: 'diagrams/system.mmd verified syntax & 1N4007 clamping loop',
-    category: 'Diagrams',
-    icon: 'account_tree',
-    targetView: 'system-diagrams',
-  },
-  {
-    id: 's-7',
-    title: 'What is the exact part number of the 5V relay?',
-    subtitle: 'GAPS.md open question #01 for BOM.md spec completion',
-    category: 'GAPS Question',
-    icon: 'help_outline',
-    targetView: 'observations',
-  },
-  {
-    id: 's-8',
-    title: 'README.md: Complete Documentation publication',
-    subtitle: 'Ready for export bundle with 100% sourced citations',
-    category: 'Documentation',
-    icon: 'description',
-    targetView: 'finished-docs',
-  },
-];
-
-export const SearchModal: React.FC<SearchModalProps> = ({
+export function SearchModal({
   isOpen,
   onClose,
-  onSelectView,
-}) => {
+  onSelect,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (result: SearchResult) => void;
+}) {
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [selected, setSelected] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const filtered = useMemo(() => {
-    if (!query.trim()) return SEARCH_CATALOG;
-    const q = query.toLowerCase();
-    return SEARCH_CATALOG.filter(
-      (item) =>
-        item.title.toLowerCase().includes(q) ||
-        item.subtitle.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q)
-    );
-  }, [query]);
+  useEffect(() => {
+    if (!isOpen) return;
+    const text = query.trim();
+    if (!text) { setResults([]); setSelected(0); return; }
+    setLoading(true);
+    const timer = window.setTimeout(() => {
+      void api.search(text).then((response) => {
+        setResults(response.results);
+        setSelected(0);
+      }).catch(() => setResults([])).finally(() => setLoading(false));
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, query]);
+
+  useEffect(() => {
+    if (isOpen) setQuery('');
+  }, [isOpen]);
 
   if (!isOpen) return null;
+  const choose = (item: SearchResult) => { onSelect(item); onClose(); };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4 bg-black/80 backdrop-blur-md animate-fadeIn"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-2xl bg-[#1c1b1c] rounded-xl border border-[#353436] shadow-2xl overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#2a2a2b] bg-[#161618]">
-          <span className="material-symbols-outlined text-[#8f9194] text-[20px]">search</span>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search moments, components, git commits, scope captures..."
-            className="w-full bg-transparent text-white placeholder-[#8f9194] font-body text-sm focus:outline-none"
-            autoFocus
-          />
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-[#8f9194] bg-[#201f20] rounded border border-[#353436]">
-            ESC
-          </kbd>
+    <div className="fixed inset-0 z-[60] flex justify-center bg-black/70 px-4 pt-[12vh] backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="h-fit w-full max-w-2xl overflow-hidden rounded-xl border border-line-strong bg-surface-2 shadow-2xl">
+        <div className="flex items-center gap-3 border-b border-line px-5 py-4"><span className="material-symbols-outlined text-muted">search</span><input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowDown') { e.preventDefault(); setSelected((n) => Math.min(n + 1, results.length - 1)); } if (e.key === 'ArrowUp') { e.preventDefault(); setSelected((n) => Math.max(n - 1, 0)); } if (e.key === 'Enter' && results[selected]) choose(results[selected]); }} placeholder="Search evidence, components, ideas, gaps…" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-muted" /><kbd className="rounded border border-line bg-surface-0 px-1.5 py-1 font-mono text-[10px] text-muted">ESC</kbd></div>
+        <div className="max-h-[60vh] overflow-y-auto p-2">
+          {loading ? <div className="p-6 text-center text-xs text-muted">Searching saved sessions…</div> : query.trim() && !results.length ? <div className="p-6 text-center text-xs text-muted">No matching evidence or artifacts.</div> : !query.trim() ? <div className="p-6 text-center text-xs text-muted">Search evidence, ideas, components and generated docs across your local sessions.</div> : results.map((item, index) => <button key={item.id} onMouseEnter={() => setSelected(index)} onClick={() => choose(item)} className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left ${selected === index ? 'bg-surface-3' : 'hover:bg-surface-3/60'}`}><span className="material-symbols-outlined text-[18px] text-muted">{item.icon}</span><span className="min-w-0 flex-1"><span className="block truncate text-sm text-white">{item.title}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{item.subtitle ?? item.category}</span></span><span className="shrink-0 font-mono text-[10px] text-muted">{item.category}</span></button>)}
         </div>
-
-        <div className="max-h-[60vh] overflow-y-auto divide-y divide-[#201f20]/50 p-2">
-          {filtered.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[#8f9194]">
-              No evidence logs or components match &ldquo;{query}&rdquo;
-            </div>
-          ) : (
-            filtered.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onSelectView(item.targetView);
-                  onClose();
-                }}
-                className="w-full text-left p-3.5 rounded-lg hover:bg-[#201f20] transition-colors flex items-center justify-between group"
-              >
-                <div className="flex items-start gap-3.5">
-                  <span className="material-symbols-outlined text-[#8f9194] group-hover:text-white text-[20px] mt-0.5 transition-colors">
-                    {item.icon}
-                  </span>
-                  <div>
-                    <div className="text-sm text-white font-medium group-hover:text-white">
-                      {item.title}
-                    </div>
-                    <div className="text-xs text-[#8f9194] mt-0.5">{item.subtitle}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono text-[#8f9194] bg-[#2a2a2b] px-2 py-0.5 rounded">
-                    {item.category}
-                  </span>
-                  <span className="material-symbols-outlined text-[16px] text-[#44474a] group-hover:text-white transition-colors">
-                    arrow_forward
-                  </span>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-
-        <div className="px-5 py-3 bg-[#161618] border-t border-[#2a2a2b] flex items-center justify-between text-xs text-[#8f9194]">
-          <span>Grounded in 8 hardware session records</span>
-          <span className="font-mono">Press ↵ to view</span>
-        </div>
+        <div className="flex items-center justify-between border-t border-line bg-surface-1 px-4 py-2 text-[10px] text-muted"><span>{results.length} result{results.length === 1 ? '' : 's'}</span><span>↑↓ Navigate · ↵ Open</span></div>
       </div>
     </div>
   );
-};
+}

@@ -1,14 +1,15 @@
-import React from 'react';
-import { ActiveView } from '../types';
+import type { ActiveView } from '../../shared/schema';
 
 interface HeaderProps {
   activeView: ActiveView;
-  onSelectView: (view: ActiveView) => void;
+  sessionName: string;
   sessionTime: string;
-  isPaused: boolean;
-  onTogglePause: () => void;
+  status: string;
+  onSelectView: (view: ActiveView) => void;
+  onOpenSessions: () => void;
   onOpenSearch: () => void;
   onOpenExport: () => void;
+  onAddCapture: () => void;
 }
 
 const NAV_ITEMS: { id: ActiveView; label: string }[] = [
@@ -23,123 +24,108 @@ const NAV_ITEMS: { id: ActiveView; label: string }[] = [
   { id: 'finished-docs', label: 'Finished Docs' },
 ];
 
-export const Header: React.FC<HeaderProps> = ({
+export function Header({
   activeView,
-  onSelectView,
+  sessionName,
   sessionTime,
-  isPaused,
-  onTogglePause,
+  status,
+  onSelectView,
+  onOpenSessions,
   onOpenSearch,
   onOpenExport,
-}) => {
+  onAddCapture,
+}: HeaderProps) {
+  const active = status === 'capturing' || status === 'processing';
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-[#131314]/90 backdrop-blur-xl border-b border-[#2a2a2b]/60">
-      <div className="h-16 w-full px-4 sm:px-6 lg:px-10 flex items-center justify-between gap-4">
-        {/* Left Brand & Session status */}
-        <div className="flex items-center gap-3.5 shrink-0">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-line/70 bg-surface-0/95 backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+        <div className="flex min-w-0 shrink-0 items-center gap-3">
           <button
-            onClick={() => onSelectView('overview')}
-            className="font-headline text-xl text-white tracking-tight font-light hover:opacity-85 transition-opacity"
+            onClick={onOpenSessions}
+            className="font-headline text-xl font-light tracking-tight text-white transition-opacity hover:opacity-80"
+            title="Session library"
           >
             devlog
           </button>
-          <span className="text-[#44474a] font-light select-none">/</span>
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isPaused ? 'bg-[#c5c7c9]' : 'bg-[#e5e2e3] animate-pulse'
-              }`}
-            />
-            <span className="text-xs text-[#c5c7c9] font-normal tracking-wide flex items-center gap-1.5">
-              <span>{isPaused ? 'Paused' : 'Active Session'}</span>
-              <span className="text-[#8f9194]">·</span>
+          <span className="select-none text-line-dim">/</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-xs text-body">
+              <span className={`h-1.5 w-1.5 rounded-full ${active ? 'animate-pulse bg-white' : 'bg-muted'}`} />
+              <span className="hidden sm:inline">{active ? 'Active session' : status}</span>
+              <span className="text-muted">·</span>
               <span className="font-mono text-white">{sessionTime}</span>
-              <span className="text-[#8f9194] hidden sm:inline">·</span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[#8f9194]">
-                <span className="material-symbols-outlined text-[13px] text-white">mic</span>
-                <span>Mic active</span>
-              </span>
-            </span>
+            </div>
+            <div className="max-w-[180px] truncate text-[11px] text-muted sm:max-w-[240px]">{sessionName}</div>
           </div>
         </div>
 
-        {/* Central Typographic Pivot Navigation */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 overflow-x-auto h-full scrollbar-none">
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectView(item.id)}
-                className={`transition-colors py-5 text-xs xl:text-sm whitespace-nowrap border-b-2 font-headline tracking-tight ${
-                  isActive
-                    ? 'text-white font-medium border-white'
-                    : 'text-[#8f9194] hover:text-white font-light border-transparent'
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Right Action Tools */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <button
-            onClick={onTogglePause}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded bg-[#201f20] hover:bg-[#2a2a2b] text-[#c5c7c9] hover:text-white text-xs transition-colors border border-[#353436]/40"
-            title={isPaused ? 'Resume Session' : 'Pause Session'}
-          >
-            <span className="material-symbols-outlined text-[15px]">
-              {isPaused ? 'play_arrow' : 'pause'}
-            </span>
-            <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'}</span>
-          </button>
-
-          <button
-            onClick={onOpenSearch}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded bg-[#201f20] hover:bg-[#2a2a2b] text-[#c5c7c9] hover:text-white text-xs transition-colors border border-[#353436]/40"
-            title="Search moments, logs, components"
-          >
-            <span className="material-symbols-outlined text-[15px]">search</span>
-            <span className="hidden sm:inline">Search</span>
-          </button>
-
-          <button
-            onClick={onOpenExport}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded bg-[#201f20] hover:bg-[#2a2a2b] text-[#c5c7c9] hover:text-white text-xs transition-colors border border-[#353436]/40"
-            title="Export files & documentation"
-          >
-            <span className="material-symbols-outlined text-[15px]">download</span>
-            <span className="hidden sm:inline">Export</span>
-          </button>
-
-          <div
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center shrink-0 ml-1 text-[#131314] cursor-pointer shadow-sm hover:opacity-90"
-            title="Active Hardware Engineer: Daksh Shrivastav"
-          >
-            <span className="material-symbols-outlined text-[17px]">person</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Secondary Pivot Bar */}
-      <div className="lg:hidden flex items-center gap-4 px-4 overflow-x-auto border-t border-[#2a2a2b]/40 py-2 scrollbar-none bg-[#161618]">
-        {NAV_ITEMS.map((item) => {
-          const isActive = activeView === item.id;
-          return (
+        <nav className="hidden h-full items-center gap-4 overflow-x-auto scrollbar-none lg:flex xl:gap-6">
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
               onClick={() => onSelectView(item.id)}
-              className={`text-xs whitespace-nowrap font-headline tracking-tight ${
-                isActive ? 'text-white font-medium' : 'text-[#8f9194] font-light'
+              className={`whitespace-nowrap border-b-2 py-5 font-headline text-xs tracking-tight transition-colors xl:text-sm ${
+                activeView === item.id
+                  ? 'border-white font-medium text-white'
+                  : 'border-transparent font-light text-muted hover:text-white'
               }`}
             >
               {item.label}
             </button>
-          );
-        })}
+          ))}
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Action icon="add" label="Add evidence" onClick={onAddCapture} primary />
+          <Action icon="search" label="Search" onClick={onOpenSearch} />
+          <Action icon="download" label="Export" onClick={onOpenExport} />
+          <button
+            onClick={onOpenSessions}
+            className="ml-1 grid h-8 w-8 place-items-center rounded-full bg-white text-surface-0 transition-opacity hover:opacity-80"
+            title="Open session library"
+          >
+            <span className="material-symbols-outlined text-[17px]">folder_open</span>
+          </button>
+        </div>
       </div>
+      <nav className="flex items-center gap-4 overflow-x-auto border-t border-line/40 bg-surface-1 px-4 py-2 scrollbar-none lg:hidden">
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onSelectView(item.id)}
+            className={`whitespace-nowrap font-headline text-xs ${activeView === item.id ? 'font-medium text-white' : 'text-muted'}`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
     </header>
   );
-};
+}
+
+function Action({
+  icon,
+  label,
+  onClick,
+  primary = false,
+}: {
+  icon: string;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs transition-colors sm:px-3 ${
+        primary
+          ? 'border-white bg-white text-surface-0 hover:bg-ink-hover'
+          : 'border-line-strong/50 bg-surface-3 text-body hover:bg-line hover:text-white'
+      }`}
+    >
+      <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
