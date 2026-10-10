@@ -1,0 +1,74 @@
+# --- Secrets and credentials ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+service-account*.json
+**/credentials.json
+**/secrets.*
+
+# --- Raw user captures and generated session data ---
+# Private audio, photos, transcripts and generated documentation bundles.
+# Nothing under data/ is ever committed.
+data/
+out/
+captures/
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
+*.opus
+*.webm
+# Fixture media is intentionally tracked; runtime uploads are not.
+!fixtures/**/*.png
+!fixtures/**/*.jpg
+!fixtures/**/*.jpeg
+!fixtures/**/*.webp
+
+# --- Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Build output ---
+dist/
+build/
+server.js
+*.tsbuildinfo
+*.out
+.vite/
+coverage/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Editors and OS clutter ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Internal working material (ACTION_PLAN §6) ---
+docs/assets/

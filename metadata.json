@@ -1,0 +1,6 @@
+{
+  "name": "devlog — Automatic Hardware Documentation",
+  "description": "Quiet, editorial hardware documentation studio synthesized from speech, oscilloscope captures, bench photos, and git commit history.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
