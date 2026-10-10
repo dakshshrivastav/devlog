@@ -14,6 +14,12 @@ Allowed source tags — cite only from this list: {{tags}}
 
 {{facts}}
 
+# Correction from a previous validation attempt
+
+{{correction}}
+
+If the correction is not `(none)`, revise the output to address every listed problem.
+
 # Rules
 
 1. Write only what the facts and evidence support. You are describing a real build, not
@@ -32,7 +38,10 @@ Allowed source tags — cite only from this list: {{tags}}
    how that was verified. Omit the field entirely if there were no incidents.
 9. Preserve every number, unit, pin and part name exactly. Never introduce a value that does
    not appear in the evidence or the facts.
-10. Plain markdown paragraphs. No headings inside the fields — the renderer adds them.
+10. Every paragraph in `standfirst`, `overview`, `architecture` and `troubleshooting` must
+    contain at least one exact citation tag from the allowed list, such as `[voice 14:02]`.
+    Do not cite a tag that is not in the allowed list.
+11. Plain markdown paragraphs. No headings inside the fields — the renderer adds them.
 
 # Output
 

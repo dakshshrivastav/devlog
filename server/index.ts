@@ -15,6 +15,7 @@ import { sessionsRouter } from './routes/sessions';
 import { captureRouter } from './routes/capture';
 import { gapsRouter } from './routes/gaps';
 import { searchRouter } from './routes/search';
+import { liveRouter } from './routes/live';
 
 async function main(): Promise<void> {
   await mkdir(config.sessionsDir, { recursive: true });
@@ -29,6 +30,7 @@ async function main(): Promise<void> {
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/sessions/:id/capture', captureRouter);
   app.use('/api/sessions/:id/gaps', gapsRouter);
+  app.use('/api/sessions/:id/live', liveRouter);
   app.use('/api/search', searchRouter);
 
   app.use('/api', (_req, res) => {

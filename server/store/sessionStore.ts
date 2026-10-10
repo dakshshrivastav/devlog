@@ -70,6 +70,7 @@ export const FILES = {
   gaps: 'gaps.json',
   incidents: 'incidents.json',
   observations: 'observations.json',
+  readmeProse: 'readme-prose.json',
   run: 'run.json',
   runs: 'runs.jsonl',
   liveRaw: 'raw/live.jsonl',
@@ -307,7 +308,7 @@ export async function createSession(input: {
     mode: input.mode,
     status: 'draft',
     createdAt: now,
-    startedAt: input.mode === 'live' ? now : null,
+    startedAt: null,
     endedAt: null,
     durationSec: null,
     repoPath: input.repoPath?.trim() || null,
@@ -380,6 +381,9 @@ function collectStatementSources(parts: {
   incidents: Incident[];
 }): Sources[] {
   const sources: Sources[] = [];
+  for (const item of parts.evidence) {
+    if (item.kind === 'measurement') sources.push(item.sources);
+  }
   for (const item of parts.bom.items) sources.push(item.sources);
   for (const tool of parts.bom.tools) sources.push(tool.sources);
   for (const node of parts.hardware.nodes) sources.push(node.sources);

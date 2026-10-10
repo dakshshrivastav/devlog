@@ -8,6 +8,7 @@
     "instant": "2026-10-08T14:02:11Z",
     "instantIsNaive": false,
     "order": 1,
+    "sources": [],
     "verification": "Scribe v2 word timing · 0.0s–6.4s into audio-1",
     "voice": {
       "audioId": "audio-1",
@@ -140,6 +141,7 @@
     "instant": "2026-10-08T14:08:19",
     "instantIsNaive": true,
     "order": 2,
+    "sources": [],
     "verification": "EXIF 14:08:19 (timezone-naive)",
     "photo": {
       "mediaId": "photo-1",
@@ -161,6 +163,7 @@
     "instant": "2026-10-08T14:09:03Z",
     "instantIsNaive": false,
     "order": 3,
+    "sources": [],
     "verification": "Scribe v2 word timing · 8.1s–14.6s into audio-1",
     "voice": {
       "audioId": "audio-1",
@@ -293,6 +296,7 @@
     "instant": "2026-10-08T14:10:44Z",
     "instantIsNaive": false,
     "order": 4,
+    "sources": [],
     "verification": "git c4e12a · 2026-10-08T14:10:44Z",
     "commit": {
       "hash": "c4e12a",
@@ -329,6 +333,7 @@
     "instant": "2026-10-08T14:11:26Z",
     "instantIsNaive": false,
     "order": 5,
+    "sources": [],
     "verification": "Scribe v2 word timing · 16.2s–20.8s into audio-1",
     "voice": {
       "audioId": "audio-1",
@@ -421,6 +426,7 @@
     "instant": "2026-10-08T14:12:44",
     "instantIsNaive": true,
     "order": 6,
+    "sources": [],
     "verification": "EXIF 14:12:44 (timezone-naive)",
     "photo": {
       "mediaId": "photo-2",
@@ -442,6 +448,7 @@
     "instant": "2026-10-08T14:14:02Z",
     "instantIsNaive": false,
     "order": 7,
+    "sources": [],
     "verification": "Scribe v2 word timing · 24.5s–30.9s into audio-1",
     "voice": {
       "audioId": "audio-1",
@@ -559,6 +566,7 @@
     "instant": "2026-10-08T14:15:31",
     "instantIsNaive": true,
     "order": 8,
+    "sources": [],
     "verification": "EXIF 14:15:31 (timezone-naive)",
     "photo": {
       "mediaId": "photo-3",
@@ -580,6 +588,7 @@
     "instant": "2026-10-08T14:19:08Z",
     "instantIsNaive": false,
     "order": 9,
+    "sources": [],
     "verification": "git 8f9b02 · 2026-10-08T14:19:08Z",
     "commit": {
       "hash": "8f9b02",
@@ -606,6 +615,7 @@
     "instant": "2026-10-08T14:20:00Z",
     "instantIsNaive": false,
     "order": 10,
+    "sources": [],
     "verification": "Typed note from capture/notes.txt",
     "note": {
       "text": "Generic 5 V SPDT relay board. The silk was covered by the terminal block, so the part number and coil resistance were never read during the session.",
@@ -621,6 +631,9 @@
     "instant": "2026-10-08T14:09:03Z",
     "instantIsNaive": false,
     "order": 11,
+    "sources": [
+      "ev-voice-2"
+    ],
     "verification": "Extracted from [voice 14:09]",
     "measurement": {
       "quantity": "3.3 V rail minimum at coil dropout",
@@ -639,6 +652,9 @@
     "instant": "2026-10-08T14:14:02Z",
     "instantIsNaive": false,
     "order": 12,
+    "sources": [
+      "ev-voice-4"
+    ],
     "verification": "Extracted from [voice 14:14]",
     "measurement": {
       "quantity": "3.3 V rail steady state after the fix",

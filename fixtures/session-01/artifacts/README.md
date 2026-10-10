@@ -1,18 +1,20 @@
 # ESP32 Relay Controller with Flyback Protection
 
-A single-board controller that switches a 5 V relay coil from an ESP32-WROOM-32, with the inductive transient clamped at the coil.
+A single-board controller that switches a 5 V relay coil from an ESP32-WROOM-32, with the inductive transient clamped at the coil. [voice 14:02] [photo 1]
 
 Session **ESP32 relay controller — brownout fix** · 17m 49s · 4 voice notes, 3 photos, 2 commits, 2 measurements, 1 note.
 
 ## 1. Overview
 
-The board drives a 5 V SPDT relay module directly from GPIO 5 and runs from a 3.3 V logic rail. Bring-up testing showed the controller restarting on every coil de-energization; a probe on the 3.3 V rail recorded a minimum of 2.65 V at the moment the coil let go.
+The board drives a 5 V SPDT relay module directly from GPIO 5 and runs from a 3.3 V logic rail. Bring-up testing showed the controller restarting on every coil de-energization; a probe on the 3.3 V rail recorded a minimum of 2.65 V at the moment the coil let go. [voice 14:02] [voice 14:09]
 
-A 15 ms software debounce was committed first and did not change the behaviour, which established the fault as electrical rather than a timing artefact. After a 1N4007 diode was fitted antiparallel across the coil terminals, the rail held 3.28 V across fifty consecutive actuations with no reset.
+A 15 ms software debounce was committed first and did not change the behaviour. After a 1N4007 diode was fitted antiparallel across the coil terminals, the rail held 3.28 V across fifty consecutive actuations with no reset. [commit c4e12a] [voice 14:11] [photo 2] [voice 14:14]
 
 ## 2. Hardware architecture
 
-The 5 V supply feeds the relay coil, and the ESP32 switches it from GPIO 5. The 3.3 V rail supplies the controller logic. D1, a 1N4007, sits antiparallel across the coil so the inductive kickback is clamped locally instead of reaching the shared 3.3 V rail. The path the transient took before the fix is marked as inferred in `diagrams/system.mmd` — the session did not establish whether the coupling was through a shared return or through the regulator.
+The 5 V supply feeds the relay coil, and the ESP32 switches it from GPIO 5. D1, a 1N4007, sits antiparallel across the coil so the inductive kickback is clamped locally. [voice 14:02] [photo 2] [commit 8f9b02]
+
+The session establishes that the 3.3 V rail sagged during coil dropout, but it does not establish whether the coupling was through a shared return or through the regulator. That edge remains explicitly inferred in `diagrams/system.mmd`. [voice 14:09]
 
 | Node | Kind | Value | Source |
 | --- | --- | --- | --- |
@@ -30,7 +32,7 @@ The 5 V supply feeds the relay coil, and the ESP32 switches it from GPIO 5. The 
 
 ## 4. Troubleshooting
 
-One incident was recorded and resolved. The controller reset on every coil de-energization, with the 3.3 V rail sagging to 2.65 V at dropout. The unsuppressed coil’s inductive kickback reached the shared logic rail. Fitting the 1N4007 antiparallel across the coil terminals fixed it, verified by fifty actuations at a steady 3.28 V and a second capture at the same probe position showing no sag.
+The controller reset on every coil de-energization, with the 3.3 V rail sagging to 2.65 V at dropout. Fitting the 1N4007 antiparallel across the coil terminals fixed it, verified by fifty actuations at a steady 3.28 V. [voice 14:02] [voice 14:09] [photo 2] [voice 14:14]
 
 ### Incident 001: Intermittent brownout reset on relay actuation
 

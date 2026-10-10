@@ -145,10 +145,24 @@ export const ResolveGapRequestSchema = z
     action: z.enum(['resolve', 'defer']).default('resolve'),
     answer: z.string().optional(),
     method: z.enum(['text', 'voice']).default('text'),
+    voice: z
+      .object({
+        audioId: z.string(),
+        startSec: z.number(),
+        endSec: z.number(),
+        quote: z.string(),
+        words: z.array(z.object({ text: z.string(), start: z.number(), end: z.number() })).optional(),
+        transcriptId: z.string().optional(),
+      })
+      .optional(),
   })
   .refine((value) => value.action === 'defer' || (value.answer ?? '').trim().length > 0, {
     message: 'A non-empty answer is required to resolve a gap.',
     path: ['answer'],
+  })
+  .refine((value) => value.method !== 'voice' || value.action === 'defer' || value.voice !== undefined, {
+    message: 'A voice resolution must include its stored transcript/audio reference.',
+    path: ['voice'],
   });
 export type ResolveGapRequest = z.infer<typeof ResolveGapRequestSchema>;
 
@@ -173,6 +187,7 @@ export const LiveTokenResponseSchema = z.object({
   audioFormat: z.string(),
   sampleRate: z.number().int(),
   expiresAt: z.string().nullable(),
+  keyterms: z.array(z.string()).optional(),
 });
 export type LiveTokenResponse = z.infer<typeof LiveTokenResponseSchema>;
 

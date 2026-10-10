@@ -45,6 +45,7 @@ import type { ImageInput } from '../providers/gemini';
 import { buildEvidence } from './timeline';
 import {
   buildTagIndex,
+  mergeIdeaGraphs,
   normalizeHardware,
   normalizeIdeas,
   providerLabel,
@@ -58,6 +59,7 @@ import {
   synthesizeObservations,
   synthesizeReadmeProse,
   type NormalizeReport,
+  type ReadmeProseOutput,
   type SynthesisContext,
   type TagIndex,
 } from './synthesize';
@@ -131,7 +133,8 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
     message: `${audioFiles.length} audio file(s), ${photoFiles.length} photo(s), ${keyterms.length} keyterm(s).`,
   });
 
-  if (audioFiles.length === 0 && photoFiles.length === 0 && !session.repoPath) {
+  const notesPath = path.join(paths.capture, 'notes.txt');
+  if (audioFiles.length === 0 && photoFiles.length === 0 && !existsSync(notesPath) && !session.repoPath) {
     throw HttpError.unprocessable(
       'This session has no audio, no photos and no repository path. Upload a capture first.'
     );
@@ -206,7 +209,9 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
   /* ------------------------------- timeline ----------------------------- */
   await setStage(sessionId, 'timeline', 0.55, 'Assembling timeline');
 
-  const baseEvidence = await buildEvidence({ paths, transcript, repo, sessionId });
+  const baseEvidence = options.synthesizeOnly
+    ? bundle.evidence.filter((item) => !item.id.startsWith('ev-measure-'))
+    : await buildEvidence({ paths, transcript, repo, sessionId });
   await emit(sessionId, 'evidence', { message: `${baseEvidence.length} evidence item(s) assembled.` });
 
   /* ------------------------------ synthesize ---------------------------- */
@@ -224,19 +229,22 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
       sessionId,
       name: 'observations',
       missing,
-      call: () => synthesizeObservations(ctx),
+      call: (correction) => synthesizeObservations(ctx, correction),
       normalize: (out) => toObservations(out, baseEvidence, index),
       validate: (value) => {
-        issues.push(...checkObservations(value));
-        issues.push(
+        const findings = [
+          ...checkObservations(value),
           ...checkSources(
             value.map((n) => ({
               label: `observation ${n.id}`,
               sources: n.evidenceId ? [n.evidenceId] : [],
             })),
             evidenceIdSet(baseEvidence)
-          )
-        );
+          ),
+        ];
+        const errors = findings.filter((issue) => issue.severity === 'error');
+        if (errors.length) throw new Error(errors.map((issue) => issue.message).join(' '));
+        issues.push(...findings);
       },
     })) ?? [];
   await writeJson(sessionId, FILES.observations, observations);
@@ -294,15 +302,15 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
     sessionId,
     name: 'ideas',
     missing,
-    call: () => synthesizeIdeas(ctx),
+    call: () => synthesizeIdeas(ctx, bundle.ideas),
     normalize: (out) => normalizeIdeas(out, index, evidenceById, report),
   });
-  const ideas: IdeaGraph = {
+  const ideas: IdeaGraph = mergeIdeaGraphs(bundle.ideas, {
     clusters: ideaNormalized?.clusters ?? [],
     nodes: ideaNormalized?.nodes ?? [],
     edges: ideaNormalized?.edges ?? [],
-    affinities: [],
-  };
+    affinities: ideaNormalized?.affinities ?? [],
+  });
   await writeJson(sessionId, FILES.ideasGraph, ideas);
 
   const chronology =
@@ -354,14 +362,15 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
     sessionId,
     name: 'readme',
     missing,
-    call: () => synthesizeReadmeProse(ctx, facts),
+    call: (correction) => synthesizeReadmeProse(ctx, facts, correction),
     normalize: (out) => out,
+    validate: (value) => validateReadmeProse(value, index),
   });
 
   /* ------------------------------- validate ----------------------------- */
   await setStage(sessionId, 'validate', 0.88, 'Validating claims and diagrams');
 
-  const artifacts = await regenerateArtifacts(sessionId, { prose: prose ?? null });
+  const artifacts = await regenerateArtifacts(sessionId, prose ? { prose } : {});
   const stored = await readJson<HardwareGraph>(
     sessionId,
     FILES.hardwareGraph,
@@ -407,18 +416,39 @@ interface AttemptInput<I, O> {
   sessionId: string;
   name: string;
   missing: string[];
-  call: () => Promise<{ data: I; attempts: number }>;
+  call: (correction?: string) => Promise<{ data: I; attempts: number }>;
   normalize: (input: I) => O;
   validate?: (value: O) => void;
 }
 
 async function attempt<I, O>(input: AttemptInput<I, O>): Promise<O | null> {
   try {
-    const result = await input.call();
-    const value = input.normalize(result.data);
-    input.validate?.(value);
+    let result: Awaited<ReturnType<typeof input.call>> | null = null;
+    let value: O | null = null;
+    let validationError: unknown;
+    let correction: string | undefined;
+    for (let retry = 0; retry < 2; retry += 1) {
+      result = await input.call(correction);
+      value = input.normalize(result.data);
+      try {
+        input.validate?.(value);
+        validationError = null;
+        break;
+      } catch (cause) {
+        validationError = cause;
+        if (retry === 0) {
+          correction = cause instanceof Error ? cause.message : 'The previous result failed local validation.';
+          await emit(input.sessionId, 'log', {
+            message: `${input.name} failed a local validation check; retrying once with the same evidence.`,
+            level: 'warn',
+          });
+        }
+      }
+    }
+    if (validationError) throw validationError;
+    if (!result || value === null) throw new Error('Synthesis returned no validated result.');
     await emit(input.sessionId, 'log', {
-      message: `${input.name} synthesized (${result.attempts} attempt${result.attempts === 1 ? '' : 's'}).`,
+      message: `${input.name} synthesized (${result.attempts} provider attempt${result.attempts === 1 ? '' : 's'}).`,
     });
     return value;
   } catch (err) {
@@ -471,6 +501,22 @@ function emptyTranscript(): Transcript {
 
 function emptyBom(): Bom {
   return { items: [], tools: [], stats: { items: 0, verified: 0, needsPn: 0, percentVerified: 0 } };
+}
+
+function validateReadmeProse(prose: ReadmeProseOutput, index: TagIndex): void {
+  const sections = [prose.standfirst, prose.overview, prose.architecture, prose.troubleshooting]
+    .filter((section): section is string => Boolean(section?.trim()));
+  const uncited: string[] = [];
+  for (const section of sections) {
+    for (const paragraph of section.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean)) {
+      const tags = [...paragraph.matchAll(/\[([^\]]+)\]/g)].map((match) => match[1]);
+      const resolved = resolveSources(tags, index);
+      if (resolved.ids.length === 0 || resolved.dropped.length > 0) uncited.push(paragraph.slice(0, 90));
+    }
+  }
+  if (uncited.length) {
+    throw new Error(`README prose contains uncited factual paragraph(s): ${uncited.join(' | ')}`);
+  }
 }
 
 export async function readStoredEvidence(sessionId: string): Promise<EvidenceItem[]> {
@@ -547,6 +593,7 @@ function toMeasurementEvidence(result: MeasurementSet, evidence: readonly Eviden
       instant,
       instantIsNaive: false,
       order: maxOrder + i + 1,
+      sources,
       verification:
         sourceTags.length > 0
           ? `Extracted from ${sourceTags.map((t) => `[${t}]`).join(' ')}`

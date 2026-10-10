@@ -152,6 +152,7 @@ export const GraphOpSchema = z.object({
     'updateNode',
     'removeNode',
     'addEdge',
+    'updateEdge',
     'removeEdge',
     'addCluster',
     'renameCluster',

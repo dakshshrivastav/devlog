@@ -10,6 +10,23 @@ they concluded. This feeds the live flowchart.
 
 Allowed source tags — cite only from this list: {{tags}}
 
+# Current graph state (live updates)
+
+{{existingGraph}}
+
+When current graph state is supplied, update it rather than restarting it: preserve stable
+node, cluster and edge ids; keep earlier sourced ideas unless the new evidence explicitly
+corrects them; append the new thought and relationships. Do not duplicate an existing idea.
+
+# Cross-tree nodes that are spatially near
+
+The server arranged the current graph and measured cross-cluster node distances. Consider
+these pairs first when proposing an affinity, but do not treat layout proximity as evidence.
+Only a source-backed connection may be confirmed; otherwise omit the link or return it with
+no citations as a candidate question.
+
+{{proximityPairs}}
+
 # Rules
 
 1. Every node and edge must cite at least one source tag. An idea you cannot cite is not an

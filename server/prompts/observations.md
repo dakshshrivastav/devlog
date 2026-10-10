@@ -12,6 +12,12 @@ source tag and is the only way you may cite it.
 
 Allowed source tags — cite only from this list: {{tags}}
 
+# Correction from a previous validation attempt
+
+{{correction}}
+
+If the correction is not `(none)`, revise the output to address every listed problem.
+
 # Rules
 
 1. Write in the third person, past tense: "The builder soldered…", "The scope capture shows…".

@@ -70,6 +70,7 @@ function voiceEvidence(
         instant: new Date(mtimeMs).toISOString(),
         instantIsNaive: false,
         order: voiceIndex,
+        sources: [],
         verification: 'Audio stored; no transcript available for this file',
         voice: { audioId, span: { startSec: 0, endSec: 0 } },
       });
@@ -89,6 +90,7 @@ function voiceEvidence(
         instant,
         instantIsNaive: false,
         order: voiceIndex,
+        sources: [],
         verification: transcript.wordTimingAvailable
           ? `Scribe word timing · ${segment.start.toFixed(1)}s–${segment.end.toFixed(1)}s into ${audioId}`
           : `Segment timing only · ${audioId}`,
@@ -139,6 +141,7 @@ async function photoEvidence(
       instant,
       instantIsNaive: exif.naive && exif.takenAt !== null,
       order: number,
+      sources: [],
       verification: exif.takenAt
         ? exif.naive
           ? `EXIF ${formatClockSeconds(exif.takenAt)} (timezone-naive)`
@@ -182,6 +185,7 @@ async function noteEvidence(captureDir: string): Promise<EvidenceItem[]> {
     instant: new Date(info.mtimeMs - (blocks.length - index - 1) * 1000).toISOString(),
     instantIsNaive: false,
     order: index + 1,
+    sources: [],
     verification: 'Typed note from capture/notes.txt',
     note: { text: block, origin: 'capture' as const },
   }));
@@ -210,6 +214,7 @@ async function commitEvidence(repo: GitRepoInfo | null): Promise<EvidenceItem[]>
       instant: commit.authoredAt || null,
       instantIsNaive: false,
       order: index + 1,
+      sources: [],
       verification: `git ${commit.hash}${commit.authoredAt ? ` · ${commit.authoredAt}` : ''}`,
       commit: {
         hash: commit.hash,
@@ -261,6 +266,7 @@ export async function buildEvidence(input: BuildEvidenceInput): Promise<Evidence
           instant: null,
           instantIsNaive: false,
           order: index + 1,
+          sources: [],
           verification: 'No transcript available',
           voice: { audioId: mediaIdOf(file), span: { startSec: 0, endSec: 0 } },
         }));

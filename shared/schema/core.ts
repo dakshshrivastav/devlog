@@ -119,6 +119,8 @@ export const EvidenceItemSchema = z.object({
   instantIsNaive: z.boolean().default(false),
   /** Stable tie-breaker for the timeline ordering policy. */
   order: z.number().int(),
+  /** Supporting evidence ids for derived items such as extracted measurements. */
+  sources: SourcesSchema.default([]),
   /** Provenance statement shown next to the item, e.g. "EXIF 14:08:19 UTC". */
   verification: z.string(),
   voice: VoicePayloadSchema.optional(),

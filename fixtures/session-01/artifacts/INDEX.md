@@ -1,6 +1,6 @@
 # ESP32 relay controller — brownout fix — documentation bundle
 
-Generated 2026-10-10T21:19:26.226Z.
+Generated 2026-10-10T22:13:12.532Z.
 
 | File | Kind | Status | Summary |
 | --- | --- | --- | --- |

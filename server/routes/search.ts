@@ -148,7 +148,10 @@ function collect(bundle: SessionBundle, needle: string): SearchResult[] {
     push(incident.id, 'incident', incident.title, incident.symptom, ICONS.incident, `Incident ${incident.number}`, 0);
   }
 
-  return out;
+  return out.map((item) => ({
+    ...item,
+    category: `${bundle.session.name} · ${item.category}`,
+  }));
 }
 
 searchRouter.get('/', async (req: Request, res: Response) => {

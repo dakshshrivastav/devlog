@@ -23,6 +23,7 @@ import {
   FILES,
   loadBundle,
   pathsFor,
+  readJson,
   saveSession,
   statArtifact,
   writeArtifacts,
@@ -46,6 +47,7 @@ import {
 } from './render/markdown';
 import { countMermaidLines } from './derive';
 import { sortTimeable } from '../../shared/timeline';
+import { ReadmeProseSchema } from '../pipeline/synthesize';
 
 const POWER_KINDS = new Set(['supply', 'regulator', 'protection', 'ground', 'load']);
 
@@ -118,6 +120,10 @@ export async function regenerateArtifacts(
 ): Promise<Artifact[]> {
   const bundle = await loadBundle(sessionId);
   const { session, evidence, bom, gaps, incidents, observations, hardware, ideas, chronology } = bundle;
+  const prose = options.prose !== undefined
+    ? options.prose
+    : await readJson(sessionId, FILES.readmeProse, ReadmeProseSchema.nullable(), null);
+  if (options.prose) await writeJson(sessionId, FILES.readmeProse, options.prose);
   const openGapCount = gaps.filter((g) => g.status === 'open').length;
   const now = new Date().toISOString();
   const paths = pathsFor(sessionId);
@@ -216,7 +222,7 @@ export async function regenerateArtifacts(
   /* ------------------------------ markdown ------------------------------ */
 
   const readmeBody = renderReadmeMd({
-    prose: options.prose ?? null,
+    prose: prose ?? null,
     session,
     evidence,
     bom,
@@ -226,7 +232,7 @@ export async function regenerateArtifacts(
   });
 
   addMarkdown('README.md', readmeBody, {
-    title: readmeTitle(session, options.prose ?? null),
+    title: readmeTitle(session, prose ?? null),
     summary:
       incidents.length > 0
         ? `${incidents.filter((i) => i.status === 'resolved').length} of ${incidents.length} incident${

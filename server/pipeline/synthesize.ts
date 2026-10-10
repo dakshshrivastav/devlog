@@ -17,6 +17,7 @@ import type {
   HardwareNode,
   IdeaCluster,
   IdeaEdge,
+  IdeaGraph,
   IdeaNode,
   MeasurementPayload,
   Session,
@@ -363,9 +364,10 @@ async function callJson<T>(
 }
 
 export async function synthesizeObservations(
-  ctx: SynthesisContext
+  ctx: SynthesisContext,
+  correction = '(none)'
 ): Promise<{ data: ObservationsOutput; attempts: number }> {
-  return callJson(ctx, 'observations', ObservationsOutputSchema, {}, true);
+  return callJson(ctx, 'observations', ObservationsOutputSchema, { correction }, true);
 }
 
 export async function synthesizeHardware(
@@ -388,9 +390,14 @@ export async function synthesizeIncidents(
 }
 
 export async function synthesizeIdeas(
-  ctx: SynthesisContext
+  ctx: SynthesisContext,
+  existingGraph?: IdeaGraph,
+  proximityPairs = '(none calculated yet)'
 ): Promise<{ data: IdeasOutput; attempts: number }> {
-  return callJson(ctx, 'ideas', IdeasOutputSchema);
+  return callJson(ctx, 'ideas', IdeasOutputSchema, {
+    existingGraph: existingGraph ? JSON.stringify(existingGraph) : '(none yet)',
+    proximityPairs,
+  });
 }
 
 export async function synthesizeChronology(
@@ -409,13 +416,15 @@ export async function synthesizeGaps(
 
 export async function synthesizeReadmeProse(
   ctx: SynthesisContext,
-  facts: string
+  facts: string,
+  correction = '(none)'
 ): Promise<{ data: ReadmeProseOutput; attempts: number }> {
   const prompt = await loadPrompt('readme', {
     evidence: renderEvidenceForPrompt(ctx.evidence),
     tags: renderTagList(ctx.index),
     sessionName: ctx.session.name,
     facts,
+    correction,
   });
   try {
     return await generateJson(prompt, ReadmeProseSchema, [], { temperature: 0.3 });
@@ -470,7 +479,7 @@ export function normalizeHardware(
       report.droppedStatements.push(`edge ${raw.from}->${raw.to} (unknown node)`);
       continue;
     }
-    if (ids.length === 0 && !raw.inferred) {
+    if (ids.length === 0) {
       report.droppedStatements.push(`edge ${raw.from}->${raw.to}`);
       continue;
     }
@@ -515,7 +524,7 @@ export function normalizeIdeas(
   index: TagIndex,
   evidenceById: ReadonlyMap<string, EvidenceItem>,
   report: NormalizeReport
-): { clusters: IdeaCluster[]; nodes: IdeaNode[]; edges: IdeaEdge[] } {
+): { clusters: IdeaCluster[]; nodes: IdeaNode[]; edges: IdeaEdge[]; affinities: IdeaGraph['affinities'] } {
   const clusters: IdeaCluster[] = output.clusters.map((c, i) => ({
     id: c.id.trim() || `cluster-${i + 1}`,
     title: c.title.trim(),
@@ -560,25 +569,81 @@ export function normalizeIdeas(
   }
 
   const edges: IdeaEdge[] = [];
-  for (const [i, raw] of output.edges.entries()) {
+  for (const raw of output.edges) {
     const { ids, dropped } = resolveSources(raw.sources, index);
     report.droppedCitations.push(...dropped);
     if (!nodeIds.has(raw.from) || !nodeIds.has(raw.to)) {
       report.droppedStatements.push(`idea edge ${raw.from}->${raw.to} (unknown node)`);
       continue;
     }
+    if (ids.length === 0) {
+      report.droppedStatements.push(`idea edge ${raw.from}->${raw.to}`);
+      continue;
+    }
     edges.push({
-      id: `idea-edge-${i + 1}`,
+      id: `idea-edge-${stablePart(raw.from)}-${raw.relation}-${stablePart(raw.to)}`,
       from: raw.from,
       to: raw.to,
       relation: raw.relation,
       label: raw.label?.trim() || undefined,
       sources: ids,
-      inferred: raw.inferred ?? ids.length === 0,
+      inferred: raw.inferred ?? false,
     });
   }
 
-  return { clusters, nodes, edges };
+  const affinities: IdeaGraph['affinities'] = [];
+  for (const raw of output.affinityCandidates) {
+    if (!nodeIds.has(raw.nodeA) || !nodeIds.has(raw.nodeB)) {
+      report.droppedStatements.push(`affinity ${raw.nodeA}<->${raw.nodeB} (unknown node)`);
+      continue;
+    }
+    const { ids, dropped } = resolveSources(raw.sources, index);
+    report.droppedCitations.push(...dropped);
+    affinities.push({
+      id: `affinity-${stablePart(raw.nodeA)}-${stablePart(raw.nodeB)}`,
+      nodeA: raw.nodeA,
+      nodeB: raw.nodeB,
+      distance: null,
+      threshold: null,
+      statement: raw.why.trim(),
+      sources: ids,
+      status: ids.length > 0 ? 'confirmed' : 'candidate',
+      confirmedAt: ids.length > 0 ? new Date().toISOString() : null,
+    });
+  }
+
+  return { clusters, nodes, edges, affinities };
+}
+
+function stablePart(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'node';
+}
+
+/** Merge a model's new graph view onto the append-only live state. */
+export function mergeIdeaGraphs(previous: IdeaGraph, incoming: IdeaGraph): IdeaGraph {
+  const clusters = new Map(previous.clusters.map((item) => [item.id, item]));
+  for (const cluster of incoming.clusters) {
+    const old = clusters.get(cluster.id);
+    clusters.set(cluster.id, old ? { ...old, ...cluster } : cluster);
+  }
+  const nodes = new Map(previous.nodes.map((item) => [item.id, item]));
+  for (const node of incoming.nodes) nodes.set(node.id, { ...nodes.get(node.id), ...node });
+  const edges = new Map(previous.edges.map((item) => [item.id, item]));
+  for (const edge of incoming.edges) edges.set(edge.id, { ...edges.get(edge.id), ...edge });
+  const affinities = new Map(previous.affinities.map((item) => [item.id, item]));
+  for (const affinity of incoming.affinities) affinities.set(affinity.id, { ...affinities.get(affinity.id), ...affinity });
+
+  const mergedNodes = [...nodes.values()];
+  const mergedClusters = [...clusters.values()].map((cluster) => ({
+    ...cluster,
+    nodeIds: mergedNodes.filter((node) => node.clusterId === cluster.id).map((node) => node.id),
+  }));
+  return {
+    clusters: mergedClusters,
+    nodes: mergedNodes,
+    edges: [...edges.values()].filter((edge) => nodes.has(edge.from) && nodes.has(edge.to)),
+    affinities: [...affinities.values()].filter((link) => nodes.has(link.nodeA) && nodes.has(link.nodeB)),
+  };
 }
 
 export function providerLabel(): string {

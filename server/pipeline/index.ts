@@ -6,7 +6,7 @@
  * the pipeline incrementally from committed transcript chunks; batch feeds it
  * once from a finished capture directory.
  */
-import { canRunBatch, config } from '../config';
+import { config } from '../config';
 import { HttpError } from '../lib/errors';
 import { runMockPipeline } from './mock';
 
@@ -20,10 +20,9 @@ export async function runPipeline(
   options: ProcessOptions = {}
 ): Promise<string> {
   if (config.mock) return runMockPipeline(sessionId);
-  if (!canRunBatch()) {
+  if (!config.gemini.apiKey) {
     throw HttpError.unprocessable(
-      'Both GEMINI_API_KEY and ELEVENLABS_API_KEY are required to process a real capture. ' +
-        'Add them to .env and restart, or set MOCK=1 to work from fixtures.'
+      'GEMINI_API_KEY is required to synthesize documentation. Add it to .env and restart, or set MOCK=1 to work from fixtures.'
     );
   }
   const { runBatchPipeline } = await import('./batch.js');
