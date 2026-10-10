@@ -1,0 +1,433 @@
+{
+  "provider": "fixture",
+  "model": "scribe_v2 (fixture)",
+  "language": "en",
+  "wordTimingAvailable": true,
+  "segments": [
+    {
+      "id": "audio-1-seg-1",
+      "audioId": "audio-1",
+      "text": "Pin five on the ESP32 is driving the five volt relay coil. Every time the coil drops out, the whole board resets.",
+      "start": 0,
+      "end": 6.4,
+      "words": [
+        {
+          "text": "Pin",
+          "start": 0,
+          "end": 0.28
+        },
+        {
+          "text": "five",
+          "start": 0.28,
+          "end": 0.56
+        },
+        {
+          "text": "on",
+          "start": 0.56,
+          "end": 0.84
+        },
+        {
+          "text": "the",
+          "start": 0.84,
+          "end": 1.12
+        },
+        {
+          "text": "ESP32",
+          "start": 1.12,
+          "end": 1.4
+        },
+        {
+          "text": "is",
+          "start": 1.4,
+          "end": 1.68
+        },
+        {
+          "text": "driving",
+          "start": 1.68,
+          "end": 1.96
+        },
+        {
+          "text": "the",
+          "start": 1.96,
+          "end": 2.24
+        },
+        {
+          "text": "five",
+          "start": 2.24,
+          "end": 2.52
+        },
+        {
+          "text": "volt",
+          "start": 2.52,
+          "end": 2.8
+        },
+        {
+          "text": "relay",
+          "start": 2.8,
+          "end": 3.08
+        },
+        {
+          "text": "coil.",
+          "start": 3.08,
+          "end": 3.36
+        },
+        {
+          "text": "Every",
+          "start": 3.36,
+          "end": 3.64
+        },
+        {
+          "text": "time",
+          "start": 3.64,
+          "end": 3.92
+        },
+        {
+          "text": "the",
+          "start": 3.92,
+          "end": 4.2
+        },
+        {
+          "text": "coil",
+          "start": 4.2,
+          "end": 4.48
+        },
+        {
+          "text": "drops",
+          "start": 4.48,
+          "end": 4.76
+        },
+        {
+          "text": "out,",
+          "start": 4.76,
+          "end": 5.04
+        },
+        {
+          "text": "the",
+          "start": 5.04,
+          "end": 5.32
+        },
+        {
+          "text": "whole",
+          "start": 5.32,
+          "end": 5.6
+        },
+        {
+          "text": "board",
+          "start": 5.6,
+          "end": 5.88
+        },
+        {
+          "text": "resets.",
+          "start": 5.88,
+          "end": 6.16
+        }
+      ],
+      "evidenceId": "ev-voice-1"
+    },
+    {
+      "id": "audio-1-seg-2",
+      "audioId": "audio-1",
+      "text": "Probe is on the three point three volt rail. Minimum two point six five volts at the moment the coil lets go.",
+      "start": 8.1,
+      "end": 14.6,
+      "words": [
+        {
+          "text": "Probe",
+          "start": 8.1,
+          "end": 8.38
+        },
+        {
+          "text": "is",
+          "start": 8.38,
+          "end": 8.66
+        },
+        {
+          "text": "on",
+          "start": 8.66,
+          "end": 8.94
+        },
+        {
+          "text": "the",
+          "start": 8.94,
+          "end": 9.22
+        },
+        {
+          "text": "three",
+          "start": 9.22,
+          "end": 9.5
+        },
+        {
+          "text": "point",
+          "start": 9.5,
+          "end": 9.78
+        },
+        {
+          "text": "three",
+          "start": 9.78,
+          "end": 10.06
+        },
+        {
+          "text": "volt",
+          "start": 10.06,
+          "end": 10.34
+        },
+        {
+          "text": "rail.",
+          "start": 10.34,
+          "end": 10.62
+        },
+        {
+          "text": "Minimum",
+          "start": 10.62,
+          "end": 10.9
+        },
+        {
+          "text": "two",
+          "start": 10.9,
+          "end": 11.18
+        },
+        {
+          "text": "point",
+          "start": 11.18,
+          "end": 11.46
+        },
+        {
+          "text": "six",
+          "start": 11.46,
+          "end": 11.74
+        },
+        {
+          "text": "five",
+          "start": 11.74,
+          "end": 12.02
+        },
+        {
+          "text": "volts",
+          "start": 12.02,
+          "end": 12.3
+        },
+        {
+          "text": "at",
+          "start": 12.3,
+          "end": 12.58
+        },
+        {
+          "text": "the",
+          "start": 12.58,
+          "end": 12.86
+        },
+        {
+          "text": "moment",
+          "start": 12.86,
+          "end": 13.14
+        },
+        {
+          "text": "the",
+          "start": 13.14,
+          "end": 13.42
+        },
+        {
+          "text": "coil",
+          "start": 13.42,
+          "end": 13.7
+        },
+        {
+          "text": "lets",
+          "start": 13.7,
+          "end": 13.98
+        },
+        {
+          "text": "go.",
+          "start": 13.98,
+          "end": 14.26
+        }
+      ],
+      "evidenceId": "ev-voice-2"
+    },
+    {
+      "id": "audio-1-seg-3",
+      "audioId": "audio-1",
+      "text": "Debounce did not help. It still resets, so this is not a timing problem.",
+      "start": 16.2,
+      "end": 20.8,
+      "words": [
+        {
+          "text": "Debounce",
+          "start": 16.2,
+          "end": 16.48
+        },
+        {
+          "text": "did",
+          "start": 16.48,
+          "end": 16.76
+        },
+        {
+          "text": "not",
+          "start": 16.76,
+          "end": 17.04
+        },
+        {
+          "text": "help.",
+          "start": 17.04,
+          "end": 17.32
+        },
+        {
+          "text": "It",
+          "start": 17.32,
+          "end": 17.6
+        },
+        {
+          "text": "still",
+          "start": 17.6,
+          "end": 17.88
+        },
+        {
+          "text": "resets,",
+          "start": 17.88,
+          "end": 18.16
+        },
+        {
+          "text": "so",
+          "start": 18.16,
+          "end": 18.44
+        },
+        {
+          "text": "this",
+          "start": 18.44,
+          "end": 18.72
+        },
+        {
+          "text": "is",
+          "start": 18.72,
+          "end": 19
+        },
+        {
+          "text": "not",
+          "start": 19,
+          "end": 19.28
+        },
+        {
+          "text": "a",
+          "start": 19.28,
+          "end": 19.56
+        },
+        {
+          "text": "timing",
+          "start": 19.56,
+          "end": 19.84
+        },
+        {
+          "text": "problem.",
+          "start": 19.84,
+          "end": 20.12
+        }
+      ],
+      "evidenceId": "ev-voice-3"
+    },
+    {
+      "id": "audio-1-seg-4",
+      "audioId": "audio-1",
+      "text": "Brownout is gone after fitting the flyback diode. The rail holds three point two eight volts across fifty actuations.",
+      "start": 24.5,
+      "end": 30.9,
+      "words": [
+        {
+          "text": "Brownout",
+          "start": 24.5,
+          "end": 24.78
+        },
+        {
+          "text": "is",
+          "start": 24.78,
+          "end": 25.06
+        },
+        {
+          "text": "gone",
+          "start": 25.06,
+          "end": 25.34
+        },
+        {
+          "text": "after",
+          "start": 25.34,
+          "end": 25.62
+        },
+        {
+          "text": "fitting",
+          "start": 25.62,
+          "end": 25.9
+        },
+        {
+          "text": "the",
+          "start": 25.9,
+          "end": 26.18
+        },
+        {
+          "text": "flyback",
+          "start": 26.18,
+          "end": 26.46
+        },
+        {
+          "text": "diode.",
+          "start": 26.46,
+          "end": 26.74
+        },
+        {
+          "text": "The",
+          "start": 26.74,
+          "end": 27.02
+        },
+        {
+          "text": "rail",
+          "start": 27.02,
+          "end": 27.3
+        },
+        {
+          "text": "holds",
+          "start": 27.3,
+          "end": 27.58
+        },
+        {
+          "text": "three",
+          "start": 27.58,
+          "end": 27.86
+        },
+        {
+          "text": "point",
+          "start": 27.86,
+          "end": 28.14
+        },
+        {
+          "text": "two",
+          "start": 28.14,
+          "end": 28.42
+        },
+        {
+          "text": "eight",
+          "start": 28.42,
+          "end": 28.7
+        },
+        {
+          "text": "volts",
+          "start": 28.7,
+          "end": 28.98
+        },
+        {
+          "text": "across",
+          "start": 28.98,
+          "end": 29.26
+        },
+        {
+          "text": "fifty",
+          "start": 29.26,
+          "end": 29.54
+        },
+        {
+          "text": "actuations.",
+          "start": 29.54,
+          "end": 29.82
+        }
+      ],
+      "evidenceId": "ev-voice-4"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "session-01",
+  "name": "ESP32 relay controller — brownout fix",
+  "slug": "esp32-relay-ctrl",
+  "mode": "batch",
+  "status": "ready",
+  "createdAt": "2026-10-08T13:58:00Z",
+  "startedAt": "2026-10-08T14:02:11Z",
+  "endedAt": "2026-10-08T14:20:00Z",
+  "durationSec": 1069,
+  "repoPath": null,
+  "repoBranch": "main",
+  "headCommit": "8f9b02",
+  "mock": true,
+  "counts": {
+    "voice": 4,
+    "photo": 3,
+    "commit": 2,
+    "note": 1,
+    "measurement": 2,
+    "evidence": 12
+  },
+  "grounding": {
+    "sourced": 45,
+    "unsourced": 0,
+    "percent": 100
+  },
+  "error": null
+}

@@ -1,0 +1,74 @@
+{
+  "revision": "Rev 0.4",
+  "items": [
+    {
+      "id": "bom-1",
+      "designator": "U1",
+      "name": "ESP32-WROOM-32 development board",
+      "spec": "3.3 V logic, dual core, GPIO 5 used as the coil drive",
+      "qty": 1,
+      "sources": [
+        "ev-photo-1",
+        "ev-voice-1"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "bom-2",
+      "designator": "K1",
+      "name": "5 V SPDT relay module",
+      "spec": "5 V DC coil, logic-level drive; part number and coil resistance not read",
+      "qty": 1,
+      "sources": [
+        "ev-voice-1",
+        "ev-photo-1",
+        "ev-note-1"
+      ],
+      "status": "needs-pn",
+      "gapId": "gap-01"
+    },
+    {
+      "id": "bom-3",
+      "designator": "D1",
+      "name": "1N4007 rectifier diode",
+      "spec": "1000 V 1 A DO-41, antiparallel across the coil",
+      "qty": 1,
+      "sources": [
+        "ev-photo-2",
+        "ev-commit-8f9b02",
+        "ev-voice-4"
+      ],
+      "status": "installed"
+    }
+  ],
+  "tools": [
+    {
+      "id": "tool-1",
+      "code": "OSC-01",
+      "name": "Bench oscilloscope",
+      "description": "Captured the 3.3 V rail during coil dropout and again after the fix.",
+      "specs": "CH1, DC coupled",
+      "icon": "show_chart",
+      "sources": [
+        "ev-photo-1",
+        "ev-voice-2"
+      ]
+    },
+    {
+      "id": "tool-2",
+      "code": "SLD-01",
+      "name": "Soldering iron",
+      "description": "Fitted the flyback diode across the relay coil terminals.",
+      "icon": "mode_heat",
+      "sources": [
+        "ev-photo-2"
+      ]
+    }
+  ],
+  "stats": {
+    "items": 3,
+    "verified": 2,
+    "needsPn": 1,
+    "percentVerified": 66.7
+  }
+}

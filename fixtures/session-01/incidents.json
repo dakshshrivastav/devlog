@@ -1,0 +1,62 @@
+[
+  {
+    "id": "incident-1",
+    "number": "001",
+    "title": "Intermittent brownout reset on relay actuation",
+    "level": "hardware",
+    "status": "resolved",
+    "phase": "Actuation testing",
+    "detectedAt": "2026-10-08T14:02:11Z",
+    "resolvedAt": "2026-10-08T14:14:02Z",
+    "telemetryTarget": "3.3 V logic rail",
+    "symptom": "The controller restarted every time the relay coil was de-energized. A 15 ms software debounce on the drive pin did not change the behaviour.",
+    "measurements": [
+      {
+        "label": "3.3 V rail minimum at coil dropout",
+        "value": "2.65 V",
+        "sources": [
+          "ev-voice-2"
+        ]
+      },
+      {
+        "label": "3.3 V rail steady state after the fix",
+        "value": "3.28 V",
+        "sources": [
+          "ev-voice-4"
+        ]
+      }
+    ],
+    "rootCause": "The coil was switched without suppression, so its inductive kickback reached the shared 3.3 V rail and pulled it below the controller’s brownout threshold.",
+    "fix": "A 1N4007 diode was fitted antiparallel across the coil terminals.",
+    "verification": "The rail held 3.28 V across fifty consecutive actuations with no reset, and a second capture at the same probe position showed no sag.",
+    "rulesLearned": [
+      {
+        "title": "Clamp an inductive load before the first actuation test",
+        "body": "A coil switched from a logic rail needs its flyback diode fitted before power is applied, not after a reset is observed.",
+        "sources": [
+          "ev-voice-3",
+          "ev-photo-2"
+        ]
+      },
+      {
+        "title": "A timing change cannot fix an electrical transient",
+        "body": "Debounce addresses contact bounce on the input side; it does nothing about back-EMF on the output side.",
+        "sources": [
+          "ev-voice-3",
+          "ev-commit-c4e12a"
+        ]
+      }
+    ],
+    "relatedCommits": [
+      "ev-commit-c4e12a"
+    ],
+    "sources": [
+      "ev-voice-1",
+      "ev-voice-2",
+      "ev-photo-2",
+      "ev-voice-4"
+    ],
+    "mediaUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAE_mZBQF9gy4lEqfYk9ujZDogPUWAtEjl6PT6m9pG7FvaKfVhOP-pCtSYDaT2I7rzsOXKcUInCR9V83ZtfQ4VL4Q5fiTZc74jcLCEkQ494Q25eEXvvsScIxtIgLznziNo4TdcXv4VbbJDQMuOhjIDBQq0--lJot9xRm-iWD1Y4x8NIEoBVuoojLWmEtPVTAmPsKkmPxeImDz8qw1r13k9ZT2cDfRUyA5gpC-QibKvg0zTcz5PYt-dcQw",
+    "mediaCaption": "Flyback diode across the relay coil"
+  }
+]

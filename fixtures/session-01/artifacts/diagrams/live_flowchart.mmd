@@ -1,0 +1,47 @@
+flowchart TD
+    %% Synthesized from 12 evidence items in session esp32-relay-ctrl
+    %% Idea graph
+    subgraph power ["Power and switching"]
+    %% [voice 14:02]
+        reset_on_switch["Board resets when the relay switches — Every coil dropout restarted the controller."]
+        class reset_on_switch hazard
+    %% [voice 14:09] [photo 1]
+        rail_sag["3.3 V rail sags to 2.65 V — Measured at the moment the coil lets go."]
+        class rail_sag hazard
+    %% [voice 14:09]
+        kickback_hypothesis["Coil back-EMF couples into the logic rail — An unsuppressed inductive transient reaching the shared 3.3 V rail."]
+    %% [photo 2]
+        fit_diode["1N4007 fitted antiparallel across the coil — Soldered directly at the coil terminals."]
+    %% [voice 14:14] [photo 3]
+        rail_stable["Rail holds 3.28 V across fifty actuations — Brownout no longer occurs after the diode was fitted."]
+    end
+    subgraph firmware ["Firmware mitigation"]
+    %% [commit c4e12a]
+        debounce_attempt["15 ms software debounce on GPIO 5 — Committed as a first attempt at stopping the reset."]
+    %% [voice 14:11]
+        debounce_failed["Resets persisted after the debounce — The timing change made no difference to the fault."]
+        class debounce_failed hazard
+    %% [voice 14:11] [commit c4e12a]
+        timing_cannot_clamp["Timing cannot suppress an inductive transient — The fault is electrical, so the fix has to be electrical."]
+    end
+
+    %% [voice 14:09]
+    reset_on_switch -->|probed the rail| rail_sag
+    %% [voice 14:09]
+    rail_sag -->|suspected back-EMF| kickback_hypothesis
+    %% [commit c4e12a]
+    kickback_hypothesis -.->|tried software first| debounce_attempt
+    %% [voice 14:11]
+    debounce_attempt -->|leadsTo| debounce_failed
+    %% [voice 14:11]
+    debounce_failed -->|refines| timing_cannot_clamp
+    %% [photo 2]
+    debounce_failed -->|moved to hardware| fit_diode
+    %% [voice 14:14]
+    fit_diode -->|confirms| rail_stable
+    %% [voice 14:14]
+    kickback_hypothesis -->|hypothesis held| rail_stable
+    %% [voice 14:11] [voice 14:09]
+    timing_cannot_clamp -.->|The failed debounce and the rail sag are the same fault seen from two sides: a timing change cannot clamp an inductive transient, so the firmware cluster and the power cluster converge on one electrical fix.| kickback_hypothesis
+
+    classDef hazard stroke:#ffb4ab,fill:#2a1a19,color:#ffb4ab;

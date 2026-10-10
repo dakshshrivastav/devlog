@@ -1,0 +1,166 @@
+{
+  "phases": [
+    {
+      "id": "bringup",
+      "title": "Bring-up and first actuation",
+      "summary": "Wiring the coil drive and the first switching test.",
+      "startInstant": "2026-10-08T14:02:11Z",
+      "endInstant": "2026-10-08T14:08:19Z",
+      "entryIds": [
+        "chron-1",
+        "chron-2"
+      ]
+    },
+    {
+      "id": "isolation",
+      "title": "Fault isolation",
+      "summary": "Probing the rail and testing a software mitigation.",
+      "startInstant": "2026-10-08T14:09:03Z",
+      "endInstant": "2026-10-08T14:11:26Z",
+      "entryIds": [
+        "chron-3",
+        "chron-4",
+        "chron-5"
+      ]
+    },
+    {
+      "id": "fix",
+      "title": "Fix and verification",
+      "summary": "Fitting the flyback diode and confirming the rail holds.",
+      "startInstant": "2026-10-08T14:12:44",
+      "endInstant": "2026-10-08T14:19:08Z",
+      "entryIds": [
+        "chron-6",
+        "chron-7",
+        "chron-8",
+        "chron-9"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "id": "chron-1",
+      "phaseId": "bringup",
+      "lane": "wiring",
+      "instant": "2026-10-08T14:02:11Z",
+      "kind": "evidence",
+      "title": "Relay coil driven from GPIO 5",
+      "body": "The five volt coil was switched directly from the logic pin.",
+      "sources": [
+        "ev-voice-1"
+      ],
+      "evidenceId": "ev-voice-1"
+    },
+    {
+      "id": "chron-2",
+      "phaseId": "bringup",
+      "lane": "measurement",
+      "instant": "2026-10-08T14:08:19",
+      "kind": "evidence",
+      "title": "Probe placed on the 3.3 V rail",
+      "body": "Channel 1 DC coupled for the switching test.",
+      "sources": [
+        "ev-photo-1"
+      ],
+      "evidenceId": "ev-photo-1",
+      "mediaUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuB2NTnult9Dz88GYp_cQ9HNWJIsfpcRfzHOfnhgxoJQUkmBGFvdW_OLW4VrNHBqVMuQrMZPUpe9-432S8biG2SwOssNscoRFtp0dfAXB5irYuBBQhnQQPGH8hFJOTozD8nY2h0N0jWo69Xi847G6a5C2KD3R6qzxLo_qJVY5QXOkM_FDAktoPKFDnqeuTCknO3wUps7NcsvmxY1WX82zj_uZNdCaO_v0ZqJ57bd6jqdO04rQlviFqo_uw",
+      "mediaCaption": "Probing the 3.3 V rail while the relay switches"
+    },
+    {
+      "id": "chron-3",
+      "phaseId": "isolation",
+      "lane": "measurement",
+      "instant": "2026-10-08T14:09:03Z",
+      "kind": "milestone",
+      "title": "Rail sag reproduced at 2.65 V",
+      "body": "The minimum appeared at coil dropout, not at turn-on.",
+      "sources": [
+        "ev-voice-2",
+        "ev-photo-1"
+      ],
+      "evidenceId": "ev-voice-2"
+    },
+    {
+      "id": "chron-4",
+      "phaseId": "isolation",
+      "lane": "firmware",
+      "instant": "2026-10-08T14:10:44Z",
+      "kind": "evidence",
+      "title": "Software debounce committed",
+      "body": "A 15 ms delay was added to the GPIO 5 output path.",
+      "sources": [
+        "ev-commit-c4e12a"
+      ],
+      "evidenceId": "ev-commit-c4e12a"
+    },
+    {
+      "id": "chron-5",
+      "phaseId": "isolation",
+      "lane": "firmware",
+      "instant": "2026-10-08T14:11:26Z",
+      "kind": "milestone",
+      "title": "Debounce ruled out",
+      "body": "Resets continued, so the fault was not a timing artefact.",
+      "sources": [
+        "ev-voice-3"
+      ],
+      "evidenceId": "ev-voice-3"
+    },
+    {
+      "id": "chron-6",
+      "phaseId": "fix",
+      "lane": "assembly",
+      "instant": "2026-10-08T14:12:44",
+      "kind": "evidence",
+      "title": "1N4007 fitted across the coil",
+      "body": "Soldered antiparallel at the coil terminals.",
+      "sources": [
+        "ev-photo-2"
+      ],
+      "evidenceId": "ev-photo-2",
+      "mediaUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAE_mZBQF9gy4lEqfYk9ujZDogPUWAtEjl6PT6m9pG7FvaKfVhOP-pCtSYDaT2I7rzsOXKcUInCR9V83ZtfQ4VL4Q5fiTZc74jcLCEkQ494Q25eEXvvsScIxtIgLznziNo4TdcXv4VbbJDQMuOhjIDBQq0--lJot9xRm-iWD1Y4x8NIEoBVuoojLWmEtPVTAmPsKkmPxeImDz8qw1r13k9ZT2cDfRUyA5gpC-QibKvg0zTcz5PYt-dcQw",
+      "mediaCaption": "Flyback diode across the relay coil"
+    },
+    {
+      "id": "chron-7",
+      "phaseId": "fix",
+      "lane": "measurement",
+      "instant": "2026-10-08T14:14:02Z",
+      "kind": "milestone",
+      "title": "Rail verified stable at 3.28 V",
+      "body": "Fifty actuations with no brownout reset.",
+      "sources": [
+        "ev-voice-4"
+      ],
+      "evidenceId": "ev-voice-4"
+    },
+    {
+      "id": "chron-8",
+      "phaseId": "fix",
+      "lane": "measurement",
+      "instant": "2026-10-08T14:15:31",
+      "kind": "evidence",
+      "title": "Confirmation capture taken",
+      "body": "Same probe position as the failing capture.",
+      "sources": [
+        "ev-photo-3"
+      ],
+      "evidenceId": "ev-photo-3",
+      "mediaUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBdLHm1EQItQZ6w8ifxoODg93Dj-cav1si-VKOnfVQnTpwSl672AqKFnG7Sy8tvo91JjL3crjPoBXos5d5rvgq7GhjtFqcqFhN32KfmR7jay4BNRiMsWI5FjL_pYThUcTq2dWnV7FrzXsq8QEawH_3iXNc7R_9qJKERhyKVsNDOiKRrgQZ1E1GWooa6aE_XTyS8AqNo4hdHPDD3WTPRJt_1zIG03deSaWOaUhMJtyTbvzm_Uqi9OTnoMA",
+      "mediaCaption": "3.3 V rail after the diode was fitted"
+    },
+    {
+      "id": "chron-9",
+      "phaseId": "fix",
+      "lane": "documentation",
+      "instant": "2026-10-08T14:19:08Z",
+      "kind": "artifact",
+      "title": "Diode recorded in BOM and schematics",
+      "body": "Documentation committed alongside the hardware change.",
+      "sources": [
+        "ev-commit-8f9b02"
+      ],
+      "evidenceId": "ev-commit-8f9b02"
+    }
+  ]
+}

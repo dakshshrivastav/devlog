@@ -1,0 +1,29 @@
+flowchart TD
+    %% Synthesized from 12 evidence items in session esp32-relay-ctrl
+    %% Build sequence
+    %% [photo 1]
+    S1["08:38 Probe placed on the 3.3 V rail"]
+    %% [photo 2]
+    S2["08:42 1N4007 fitted across the coil"]
+    %% [photo 3]
+    S3["08:45 Confirmation capture taken"]
+    %% [voice 14:02]
+    S4["14:02 Relay coil driven from GPIO 5"]
+    %% [voice 14:09] [photo 1]
+    S5["14:09 Rail sag reproduced at 2.65 V"]
+    %% [commit c4e12a]
+    S6["14:10 Software debounce committed"]
+    %% [voice 14:11]
+    S7["14:11 Debounce ruled out"]
+    %% [voice 14:14]
+    S8["14:14 Rail verified stable at 3.28 V"]
+    %% [commit 8f9b02]
+    S9["14:19 Diode recorded in BOM and schematics"]
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+    S4 --> S5
+    S5 --> S6
+    S6 --> S7
+    S7 --> S8
+    S8 --> S9

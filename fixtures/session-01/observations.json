@@ -1,0 +1,102 @@
+[
+  {
+    "id": "obs-1",
+    "instant": "2026-10-08T14:02:11Z",
+    "timeLabel": "14:02",
+    "kind": "speech",
+    "title": "The builder reported that the controller restarted each time the relay coil was de-energized from GPIO 5.",
+    "body": "First actuation test on the bench.",
+    "tag": "Hardware trigger · GPIO 5",
+    "sourceLabel": "voice 14:02",
+    "evidenceId": "ev-voice-1"
+  },
+  {
+    "id": "obs-2",
+    "instant": "2026-10-08T14:08:19",
+    "timeLabel": "14:08",
+    "kind": "photo",
+    "title": "A probe was placed on the 3.3 V rail with channel 1 DC coupled.",
+    "body": "Capture taken during relay switching.",
+    "tag": "Bench capture 01",
+    "sourceLabel": "photo 1",
+    "evidenceId": "ev-photo-1",
+    "media": {
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuB2NTnult9Dz88GYp_cQ9HNWJIsfpcRfzHOfnhgxoJQUkmBGFvdW_OLW4VrNHBqVMuQrMZPUpe9-432S8biG2SwOssNscoRFtp0dfAXB5irYuBBQhnQQPGH8hFJOTozD8nY2h0N0jWo69Xi847G6a5C2KD3R6qzxLo_qJVY5QXOkM_FDAktoPKFDnqeuTCknO3wUps7NcsvmxY1WX82zj_uZNdCaO_v0ZqJ57bd6jqdO04rQlviFqo_uw",
+      "caption": "Probing the 3.3 V rail while the relay switches",
+      "meta": "Bench camera · timezone-naive EXIF"
+    }
+  },
+  {
+    "id": "obs-3",
+    "instant": "2026-10-08T14:09:03Z",
+    "timeLabel": "14:09",
+    "kind": "speech",
+    "title": "The rail was observed to sag to a minimum of 2.65 V at the moment the coil let go.",
+    "body": "The minimum coincided with coil dropout rather than turn-on.",
+    "tag": "Rail minimum",
+    "sourceLabel": "voice 14:09",
+    "evidenceId": "ev-voice-2",
+    "measurementId": "ev-measure-1"
+  },
+  {
+    "id": "obs-4",
+    "instant": "2026-10-08T14:10:44Z",
+    "timeLabel": "14:10",
+    "kind": "commit",
+    "title": "A 15 ms software debounce was committed to the GPIO 5 output path.",
+    "body": "firmware/relay.c on main.",
+    "tag": "Software mitigation",
+    "sourceLabel": "commit c4e12a",
+    "evidenceId": "ev-commit-c4e12a"
+  },
+  {
+    "id": "obs-5",
+    "instant": "2026-10-08T14:11:26Z",
+    "timeLabel": "14:11",
+    "kind": "speech",
+    "title": "The resets were observed to continue after the debounce was applied.",
+    "body": "The timing change did not affect the fault.",
+    "tag": "Mitigation ruled out",
+    "sourceLabel": "voice 14:11",
+    "evidenceId": "ev-voice-3"
+  },
+  {
+    "id": "obs-6",
+    "instant": "2026-10-08T14:12:44",
+    "timeLabel": "14:12",
+    "kind": "photo",
+    "title": "A 1N4007 diode was soldered antiparallel across the relay coil terminals.",
+    "body": "Fitted directly at the coil rather than at the driver.",
+    "tag": "Flyback diode fitted",
+    "sourceLabel": "photo 2",
+    "evidenceId": "ev-photo-2",
+    "media": {
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuAE_mZBQF9gy4lEqfYk9ujZDogPUWAtEjl6PT6m9pG7FvaKfVhOP-pCtSYDaT2I7rzsOXKcUInCR9V83ZtfQ4VL4Q5fiTZc74jcLCEkQ494Q25eEXvvsScIxtIgLznziNo4TdcXv4VbbJDQMuOhjIDBQq0--lJot9xRm-iWD1Y4x8NIEoBVuoojLWmEtPVTAmPsKkmPxeImDz8qw1r13k9ZT2cDfRUyA5gpC-QibKvg0zTcz5PYt-dcQw",
+      "caption": "Flyback diode across the relay coil",
+      "meta": "Macro inspection · timezone-naive EXIF"
+    }
+  },
+  {
+    "id": "obs-7",
+    "instant": "2026-10-08T14:14:02Z",
+    "timeLabel": "14:14",
+    "kind": "speech",
+    "title": "The rail was recorded holding 3.28 V across fifty consecutive actuations with no reset.",
+    "body": "Verification run after the diode was fitted.",
+    "tag": "Verified stable",
+    "sourceLabel": "voice 14:14",
+    "evidenceId": "ev-voice-4",
+    "measurementId": "ev-measure-2"
+  },
+  {
+    "id": "obs-8",
+    "instant": "2026-10-08T14:19:08Z",
+    "timeLabel": "14:19",
+    "kind": "commit",
+    "title": "The diode was recorded in the bill of materials and the schematic documentation.",
+    "body": "docs/BOM.md on main.",
+    "tag": "Documentation updated",
+    "sourceLabel": "commit 8f9b02",
+    "evidenceId": "ev-commit-8f9b02"
+  }
+]

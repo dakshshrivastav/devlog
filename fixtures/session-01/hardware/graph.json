@@ -1,0 +1,206 @@
+{
+  "nodes": [
+    {
+      "id": "vcc-5",
+      "name": "5 V supply rail",
+      "kind": "supply",
+      "value": "5 V DC",
+      "sources": [
+        "ev-voice-1"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "rail-3v3",
+      "name": "3.3 V logic rail",
+      "kind": "bus",
+      "value": "3.28 V steady after the fix",
+      "sources": [
+        "ev-voice-4",
+        "ev-photo-1"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "mcu",
+      "designator": "U1",
+      "name": "ESP32-WROOM-32",
+      "kind": "mcu",
+      "value": "3.3 V logic",
+      "sources": [
+        "ev-photo-1",
+        "ev-voice-1"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "relay-coil",
+      "designator": "K1",
+      "name": "5 V SPDT relay module",
+      "kind": "actuator",
+      "value": "5 V DC coil",
+      "sources": [
+        "ev-voice-1",
+        "ev-photo-1",
+        "ev-note-1"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "d1",
+      "designator": "D1",
+      "name": "1N4007 flyback diode",
+      "kind": "protection",
+      "value": "antiparallel across the coil",
+      "sources": [
+        "ev-photo-2",
+        "ev-commit-8f9b02",
+        "ev-voice-4"
+      ],
+      "hazard": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "hw-edge-1",
+      "from": "vcc-5",
+      "to": "relay-coil",
+      "net": "5V",
+      "style": "solid",
+      "label": "coil supply",
+      "sources": [
+        "ev-voice-1"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "hw-edge-2",
+      "from": "mcu",
+      "to": "relay-coil",
+      "signal": "GPIO 5",
+      "style": "solid",
+      "label": "drive",
+      "sources": [
+        "ev-voice-1"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "hw-edge-3",
+      "from": "rail-3v3",
+      "to": "mcu",
+      "net": "3V3",
+      "style": "solid",
+      "label": "logic supply",
+      "sources": [
+        "ev-photo-1"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "hw-edge-4",
+      "from": "d1",
+      "to": "relay-coil",
+      "style": "dashed",
+      "label": "clamps back-EMF",
+      "sources": [
+        "ev-photo-2",
+        "ev-commit-8f9b02"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "hw-edge-5",
+      "from": "relay-coil",
+      "to": "rail-3v3",
+      "style": "dashed",
+      "label": "transient coupling path",
+      "sources": [
+        "ev-voice-2"
+      ],
+      "inferred": true
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "diagram-system",
+      "kind": "system",
+      "title": "System architecture",
+      "filename": "system.mmd",
+      "mmd": "flowchart TD\n    %% Synthesized from 12 evidence items in session esp32-relay-ctrl\n    %% System architecture\n    %% [voice 14:02]\n    vcc_5[\"5 V supply rail — 5 V DC\"]\n    %% [voice 14:14] [photo 1]\n    rail_3v3[\"3.3 V logic rail — 3.28 V steady after the fix\"]\n    %% [photo 1] [voice 14:02]\n    mcu[\"U1 · ESP32-WROOM-32 · 3.3 V logic\"]\n    %% [voice 14:02] [photo 1] [note 1]\n    relay_coil[\"K1 · 5 V SPDT relay module · 5 V DC coil\"]\n    %% [photo 2] [commit 8f9b02] [voice 14:14]\n    d1[\"D1 · 1N4007 flyback diode · antiparallel across the coil\"]\n\n    %% [voice 14:02]\n    vcc_5 -->|coil supply| relay_coil\n    %% [voice 14:02]\n    mcu -->|drive| relay_coil\n    %% [photo 1]\n    rail_3v3 -->|logic supply| mcu\n    %% [photo 2] [commit 8f9b02]\n    d1 -.->|clamps back-EMF| relay_coil\n    %% [voice 14:09]\n    relay_coil -.->|transient coupling path| rail_3v3\n",
+      "parseStatus": "valid",
+      "errors": [],
+      "lineCount": 23,
+      "sources": [
+        "ev-voice-1",
+        "ev-voice-4",
+        "ev-photo-1",
+        "ev-note-1",
+        "ev-photo-2",
+        "ev-commit-8f9b02",
+        "ev-voice-2"
+      ],
+      "generatedAt": "2026-10-10T21:19:26.215Z"
+    },
+    {
+      "id": "diagram-power_distribution",
+      "kind": "power_distribution",
+      "title": "Power distribution",
+      "filename": "power_distribution.mmd",
+      "mmd": "flowchart LR\n    %% Synthesized from 12 evidence items in session esp32-relay-ctrl\n    %% Power distribution rails\n    %% [voice 14:02]\n    vcc_5[\"5 V supply rail — 5 V DC\"]\n    %% [photo 2] [commit 8f9b02] [voice 14:14]\n    d1[\"D1 · 1N4007 flyback diode · antiparallel across the coil\"]\n\n",
+      "parseStatus": "valid",
+      "errors": [],
+      "lineCount": 7,
+      "sources": [
+        "ev-voice-1",
+        "ev-photo-2",
+        "ev-commit-8f9b02",
+        "ev-voice-4"
+      ],
+      "generatedAt": "2026-10-10T21:19:26.215Z"
+    },
+    {
+      "id": "diagram-build_steps",
+      "kind": "build_steps",
+      "title": "Build sequence",
+      "filename": "build_steps.mmd",
+      "mmd": "flowchart TD\n    %% Synthesized from 12 evidence items in session esp32-relay-ctrl\n    %% Build sequence\n    %% [photo 1]\n    S1[\"08:38 Probe placed on the 3.3 V rail\"]\n    %% [photo 2]\n    S2[\"08:42 1N4007 fitted across the coil\"]\n    %% [photo 3]\n    S3[\"08:45 Confirmation capture taken\"]\n    %% [voice 14:02]\n    S4[\"14:02 Relay coil driven from GPIO 5\"]\n    %% [voice 14:09] [photo 1]\n    S5[\"14:09 Rail sag reproduced at 2.65 V\"]\n    %% [commit c4e12a]\n    S6[\"14:10 Software debounce committed\"]\n    %% [voice 14:11]\n    S7[\"14:11 Debounce ruled out\"]\n    %% [voice 14:14]\n    S8[\"14:14 Rail verified stable at 3.28 V\"]\n    %% [commit 8f9b02]\n    S9[\"14:19 Diode recorded in BOM and schematics\"]\n    S1 --> S2\n    S2 --> S3\n    S3 --> S4\n    S4 --> S5\n    S5 --> S6\n    S6 --> S7\n    S7 --> S8\n    S8 --> S9\n",
+      "parseStatus": "valid",
+      "errors": [],
+      "lineCount": 29,
+      "sources": [
+        "ev-photo-1",
+        "ev-photo-2",
+        "ev-photo-3",
+        "ev-voice-1",
+        "ev-voice-2",
+        "ev-commit-c4e12a",
+        "ev-voice-3",
+        "ev-voice-4",
+        "ev-commit-8f9b02"
+      ],
+      "generatedAt": "2026-10-10T21:19:26.215Z"
+    },
+    {
+      "id": "diagram-live_flowchart",
+      "kind": "live_flowchart",
+      "title": "Idea graph",
+      "filename": "live_flowchart.mmd",
+      "mmd": "flowchart TD\n    %% Synthesized from 12 evidence items in session esp32-relay-ctrl\n    %% Idea graph\n    subgraph power [\"Power and switching\"]\n    %% [voice 14:02]\n        reset_on_switch[\"Board resets when the relay switches — Every coil dropout restarted the controller.\"]\n        class reset_on_switch hazard\n    %% [voice 14:09] [photo 1]\n        rail_sag[\"3.3 V rail sags to 2.65 V — Measured at the moment the coil lets go.\"]\n        class rail_sag hazard\n    %% [voice 14:09]\n        kickback_hypothesis[\"Coil back-EMF couples into the logic rail — An unsuppressed inductive transient reaching the shared 3.3 V rail.\"]\n    %% [photo 2]\n        fit_diode[\"1N4007 fitted antiparallel across the coil — Soldered directly at the coil terminals.\"]\n    %% [voice 14:14] [photo 3]\n        rail_stable[\"Rail holds 3.28 V across fifty actuations — Brownout no longer occurs after the diode was fitted.\"]\n    end\n    subgraph firmware [\"Firmware mitigation\"]\n    %% [commit c4e12a]\n        debounce_attempt[\"15 ms software debounce on GPIO 5 — Committed as a first attempt at stopping the reset.\"]\n    %% [voice 14:11]\n        debounce_failed[\"Resets persisted after the debounce — The timing change made no difference to the fault.\"]\n        class debounce_failed hazard\n    %% [voice 14:11] [commit c4e12a]\n        timing_cannot_clamp[\"Timing cannot suppress an inductive transient — The fault is electrical, so the fix has to be electrical.\"]\n    end\n\n    %% [voice 14:09]\n    reset_on_switch -->|probed the rail| rail_sag\n    %% [voice 14:09]\n    rail_sag -->|suspected back-EMF| kickback_hypothesis\n    %% [commit c4e12a]\n    kickback_hypothesis -.->|tried software first| debounce_attempt\n    %% [voice 14:11]\n    debounce_attempt -->|leadsTo| debounce_failed\n    %% [voice 14:11]\n    debounce_failed -->|refines| timing_cannot_clamp\n    %% [photo 2]\n    debounce_failed -->|moved to hardware| fit_diode\n    %% [voice 14:14]\n    fit_diode -->|confirms| rail_stable\n    %% [voice 14:14]\n    kickback_hypothesis -->|hypothesis held| rail_stable\n    %% [voice 14:11] [voice 14:09]\n    timing_cannot_clamp -.->|The failed debounce and the rail sag are the same fault seen from two sides: a timing change cannot clamp an inductive transient, so the firmware cluster and the power cluster converge on one electrical fix.| kickback_hypothesis\n\n    classDef hazard stroke:#ffb4ab,fill:#2a1a19,color:#ffb4ab;\n",
+      "parseStatus": "valid",
+      "errors": [],
+      "lineCount": 45,
+      "sources": [
+        "ev-voice-1",
+        "ev-voice-2",
+        "ev-photo-1",
+        "ev-commit-c4e12a",
+        "ev-voice-3",
+        "ev-photo-2",
+        "ev-voice-4",
+        "ev-photo-3"
+      ],
+      "generatedAt": "2026-10-10T21:19:26.215Z"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+flowchart TD
+    %% Synthesized from 12 evidence items in session esp32-relay-ctrl
+    %% System architecture
+    %% [voice 14:02]
+    vcc_5["5 V supply rail — 5 V DC"]
+    %% [voice 14:14] [photo 1]
+    rail_3v3["3.3 V logic rail — 3.28 V steady after the fix"]
+    %% [photo 1] [voice 14:02]
+    mcu["U1 · ESP32-WROOM-32 · 3.3 V logic"]
+    %% [voice 14:02] [photo 1] [note 1]
+    relay_coil["K1 · 5 V SPDT relay module · 5 V DC coil"]
+    %% [photo 2] [commit 8f9b02] [voice 14:14]
+    d1["D1 · 1N4007 flyback diode · antiparallel across the coil"]
+
+    %% [voice 14:02]
+    vcc_5 -->|coil supply| relay_coil
+    %% [voice 14:02]
+    mcu -->|drive| relay_coil
+    %% [photo 1]
+    rail_3v3 -->|logic supply| mcu
+    %% [photo 2] [commit 8f9b02]
+    d1 -.->|clamps back-EMF| relay_coil
+    %% [voice 14:09]
+    relay_coil -.->|transient coupling path| rail_3v3

@@ -12,10 +12,10 @@ service-account*.json
 
 # --- Raw user captures and generated session data ---
 # Private audio, photos, transcripts and generated documentation bundles.
-# Nothing under data/ is ever committed.
-data/
-out/
-captures/
+# Nothing under the runtime data directory is ever committed.
+/data/
+/out/
+/captures/
 *.wav
 *.mp3
 *.m4a

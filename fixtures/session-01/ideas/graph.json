@@ -1,0 +1,230 @@
+{
+  "clusters": [
+    {
+      "id": "power",
+      "title": "Power and switching",
+      "subtitle": "Rail behaviour under an inductive load",
+      "nodeIds": [
+        "reset-on-switch",
+        "rail-sag",
+        "kickback-hypothesis",
+        "fit-diode",
+        "rail-stable"
+      ]
+    },
+    {
+      "id": "firmware",
+      "title": "Firmware mitigation",
+      "subtitle": "What a timing change can and cannot fix",
+      "nodeIds": [
+        "debounce-attempt",
+        "debounce-failed",
+        "timing-cannot-clamp"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "reset-on-switch",
+      "clusterId": "power",
+      "kind": "observation",
+      "label": "Board resets when the relay switches",
+      "detail": "Every coil dropout restarted the controller.",
+      "instant": "2026-10-08T14:02:11Z",
+      "sources": [
+        "ev-voice-1"
+      ],
+      "hazard": true
+    },
+    {
+      "id": "rail-sag",
+      "clusterId": "power",
+      "kind": "observation",
+      "label": "3.3 V rail sags to 2.65 V",
+      "detail": "Measured at the moment the coil lets go.",
+      "instant": "2026-10-08T14:09:03Z",
+      "sources": [
+        "ev-voice-2",
+        "ev-photo-1"
+      ],
+      "hazard": true
+    },
+    {
+      "id": "kickback-hypothesis",
+      "clusterId": "power",
+      "kind": "hypothesis",
+      "label": "Coil back-EMF couples into the logic rail",
+      "detail": "An unsuppressed inductive transient reaching the shared 3.3 V rail.",
+      "instant": "2026-10-08T14:09:03Z",
+      "sources": [
+        "ev-voice-2"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "debounce-attempt",
+      "clusterId": "firmware",
+      "kind": "action",
+      "label": "15 ms software debounce on GPIO 5",
+      "detail": "Committed as a first attempt at stopping the reset.",
+      "instant": "2026-10-08T14:10:44Z",
+      "sources": [
+        "ev-commit-c4e12a"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "debounce-failed",
+      "clusterId": "firmware",
+      "kind": "observation",
+      "label": "Resets persisted after the debounce",
+      "detail": "The timing change made no difference to the fault.",
+      "instant": "2026-10-08T14:11:26Z",
+      "sources": [
+        "ev-voice-3"
+      ],
+      "hazard": true
+    },
+    {
+      "id": "timing-cannot-clamp",
+      "clusterId": "firmware",
+      "kind": "conclusion",
+      "label": "Timing cannot suppress an inductive transient",
+      "detail": "The fault is electrical, so the fix has to be electrical.",
+      "instant": "2026-10-08T14:11:26Z",
+      "sources": [
+        "ev-voice-3",
+        "ev-commit-c4e12a"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "fit-diode",
+      "clusterId": "power",
+      "kind": "action",
+      "label": "1N4007 fitted antiparallel across the coil",
+      "detail": "Soldered directly at the coil terminals.",
+      "instant": "2026-10-08T14:12:44",
+      "sources": [
+        "ev-photo-2"
+      ],
+      "hazard": false
+    },
+    {
+      "id": "rail-stable",
+      "clusterId": "power",
+      "kind": "conclusion",
+      "label": "Rail holds 3.28 V across fifty actuations",
+      "detail": "Brownout no longer occurs after the diode was fitted.",
+      "instant": "2026-10-08T14:14:02Z",
+      "sources": [
+        "ev-voice-4",
+        "ev-photo-3"
+      ],
+      "hazard": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "idea-edge-1",
+      "from": "reset-on-switch",
+      "to": "rail-sag",
+      "relation": "leadsTo",
+      "label": "probed the rail",
+      "sources": [
+        "ev-voice-2"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "idea-edge-2",
+      "from": "rail-sag",
+      "to": "kickback-hypothesis",
+      "relation": "leadsTo",
+      "label": "suspected back-EMF",
+      "sources": [
+        "ev-voice-2"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "idea-edge-3",
+      "from": "kickback-hypothesis",
+      "to": "debounce-attempt",
+      "relation": "branches",
+      "label": "tried software first",
+      "sources": [
+        "ev-commit-c4e12a"
+      ],
+      "inferred": true
+    },
+    {
+      "id": "idea-edge-4",
+      "from": "debounce-attempt",
+      "to": "debounce-failed",
+      "relation": "leadsTo",
+      "sources": [
+        "ev-voice-3"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "idea-edge-5",
+      "from": "debounce-failed",
+      "to": "timing-cannot-clamp",
+      "relation": "refines",
+      "sources": [
+        "ev-voice-3"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "idea-edge-6",
+      "from": "debounce-failed",
+      "to": "fit-diode",
+      "relation": "leadsTo",
+      "label": "moved to hardware",
+      "sources": [
+        "ev-photo-2"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "idea-edge-7",
+      "from": "fit-diode",
+      "to": "rail-stable",
+      "relation": "confirms",
+      "sources": [
+        "ev-voice-4"
+      ],
+      "inferred": false
+    },
+    {
+      "id": "idea-edge-8",
+      "from": "kickback-hypothesis",
+      "to": "rail-stable",
+      "relation": "confirms",
+      "label": "hypothesis held",
+      "sources": [
+        "ev-voice-4"
+      ],
+      "inferred": false
+    }
+  ],
+  "affinities": [
+    {
+      "id": "affinity-1",
+      "nodeA": "timing-cannot-clamp",
+      "nodeB": "kickback-hypothesis",
+      "distance": null,
+      "threshold": null,
+      "statement": "The failed debounce and the rail sag are the same fault seen from two sides: a timing change cannot clamp an inductive transient, so the firmware cluster and the power cluster converge on one electrical fix.",
+      "sources": [
+        "ev-voice-3",
+        "ev-voice-2"
+      ],
+      "status": "confirmed",
+      "confirmedAt": "2026-10-08T14:14:02Z"
+    }
+  ]
+}

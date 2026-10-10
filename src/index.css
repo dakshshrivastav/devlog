@@ -1,12 +1,52 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+ * Design tokens.
+ *
+ * These are the exact hex values the Stitch prototype hardcoded inline across
+ * every view. They live here so the palette is addressable; rendered output is
+ * unchanged. `bg-[#1c1b1c]` arbitrary values keep working alongside
+ * `bg-surface-2`.
+ * ------------------------------------------------------------------------- */
+@theme {
+  /* Surfaces, darkest to lightest */
+  --color-surface-inset: #0e0e0f;
+  --color-surface-0: #131314;
+  --color-surface-1: #161618;
+  --color-surface-2: #1c1b1c;
+  --color-surface-3: #201f20;
+  --color-surface-toast: #39393a;
+
+  /* Lines */
+  --color-line-dim: #44474a;
+  --color-line: #2a2a2b;
+  --color-line-strong: #353436;
+
+  /* Text */
+  --color-muted: #8f9194;
+  --color-body: #c5c7c9;
+  --color-mono: #c6c6cf;
+  --color-ink-text: #e5e2e3;
+  --color-ink-hover: #e2e2e4;
+
+  /* Alert — brownout, hazards, open gaps */
+  --color-alert: #ffb4ab;
+  --color-alert-deep: #93000a;
+
+  /* Type */
+  --font-headline: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+}
 
 @layer base {
-  html, body {
+  html,
+  body {
     margin: 0;
     padding: 0;
-    background-color: #131314;
-    color: #e5e2e3;
-    font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-surface-0);
+    color: var(--color-ink-text);
+    font-family: var(--font-body);
   }
 
   body {
@@ -22,26 +62,154 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a2a2b;
+    background: var(--color-line);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #353436;
+    background: var(--color-line-strong);
   }
 }
 
-.font-headline {
-  font-family: 'Space Grotesk', sans-serif;
+@layer utilities {
+  /* The prototype used `animate-fadeIn` in ~20 places but no keyframes existed,
+   * so Tailwind emitted nothing. Defined here so the intended motion is real. */
+  .animate-fadeIn {
+    animation: devlog-fade-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-riseIn {
+    animation: devlog-rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
-.font-body {
-  font-family: 'Hanken Grotesk', sans-serif;
+@keyframes devlog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
+@keyframes devlog-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-riseIn {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Mermaid theming.
+ *
+ * System Diagrams renders real mermaid.js output. `theme: base` plus
+ * themeVariables gets most of the way; this layer finishes the editorial look —
+ * Space Grotesk node labels, mono values, hairline strokes, and the `hazard`
+ * class for alert nodes.
+ * ------------------------------------------------------------------------- */
+.devlog-mermaid {
+  font-family: var(--font-body);
+}
+
+.devlog-mermaid svg {
+  max-width: 100%;
+  height: auto;
+  background: transparent !important;
+}
+
+.devlog-mermaid .node rect,
+.devlog-mermaid .node polygon,
+.devlog-mermaid .node circle {
+  fill: var(--color-surface-3) !important;
+  stroke: var(--color-line) !important;
+  stroke-width: 1px !important;
+  rx: 8;
+  ry: 8;
+}
+
+.devlog-mermaid .node .label,
+.devlog-mermaid .nodeLabel {
+  font-family: var(--font-headline) !important;
+  color: #ffffff !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em;
+  background: transparent !important;
+}
+
+.devlog-mermaid .node.hazard rect,
+.devlog-mermaid .node.hazard polygon {
+  stroke: var(--color-alert) !important;
+  fill: color-mix(in srgb, var(--color-alert-deep) 22%, var(--color-surface-3)) !important;
+}
+
+.devlog-mermaid .node.hazard .nodeLabel {
+  color: var(--color-alert) !important;
+}
+
+.devlog-mermaid .edgePath path,
+.devlog-mermaid .flowchart-link {
+  stroke: var(--color-line-dim) !important;
+  stroke-width: 1.5px !important;
+}
+
+.devlog-mermaid .edgePath path.arrow {
+  fill: var(--color-line-dim) !important;
+}
+
+.devlog-mermaid .marker {
+  fill: var(--color-line-dim) !important;
+  stroke: var(--color-line-dim) !important;
+}
+
+.devlog-mermaid .edgeLabel {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 11px !important;
+  color: var(--color-body) !important;
+  background-color: var(--color-surface-2) !important;
+}
+
+.devlog-mermaid .edgeLabel rect {
+  fill: var(--color-surface-2) !important;
+  stroke: none !important;
+}
+
+.devlog-mermaid .cluster rect {
+  fill: var(--color-surface-2) !important;
+  stroke: var(--color-line) !important;
+  stroke-width: 1px !important;
+  rx: 12;
+  ry: 12;
+}
+
+.devlog-mermaid .cluster .nodeLabel,
+.devlog-mermaid .cluster span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted) !important;
+}
+
+/* Provenance hover: nodes carry data-evidence ids; hovering lifts the stroke. */
+.devlog-mermaid .node[data-sources]:hover rect {
+  stroke: #ffffff !important;
+  cursor: pointer;
 }

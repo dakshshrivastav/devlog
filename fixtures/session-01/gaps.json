@@ -1,0 +1,52 @@
+[
+  {
+    "id": "gap-01",
+    "number": "01",
+    "question": "What is the relay module’s part number and coil resistance?",
+    "description": "BOM.md cannot specify K1 without it, and coil current draw stays unknown — which is what determines how much transient the rail has to absorb.",
+    "targetDoc": "BOM.md",
+    "priority": "high",
+    "status": "open",
+    "appliesTo": [
+      {
+        "kind": "bom",
+        "id": "bom-2",
+        "field": "coil resistance"
+      }
+    ],
+    "placeholder": "e.g. SRD-05VDC-SL-C, 70 Ω coil"
+  },
+  {
+    "id": "gap-02",
+    "number": "02",
+    "question": "What brownout threshold is configured in the firmware?",
+    "description": "The rail was measured at 2.65 V during the fault, but nothing in the session states the threshold the controller actually trips at, so the margin cannot be documented.",
+    "targetDoc": "SYSTEM_SPECS.md",
+    "priority": "medium",
+    "status": "open",
+    "appliesTo": [
+      {
+        "kind": "hardware",
+        "id": "mcu",
+        "field": "brownout threshold"
+      }
+    ],
+    "placeholder": "e.g. 2.80 V from sdkconfig"
+  },
+  {
+    "id": "gap-03",
+    "number": "03",
+    "question": "Do the 5 V supply and the 3.3 V rail share a return path, or is the coupling through the regulator?",
+    "description": "SCHEMATICS.md shows the transient reaching the 3.3 V rail, but the session never established the path it took. The diagram currently marks that edge as inferred.",
+    "targetDoc": "SCHEMATICS.md",
+    "priority": "medium",
+    "status": "open",
+    "appliesTo": [
+      {
+        "kind": "hardware",
+        "id": "hw-edge-5",
+        "field": "coupling path"
+      }
+    ]
+  }
+]
