@@ -232,7 +232,7 @@ export default function App() {
           {bundle && <>
             <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} onSelect={openSearchResult} />
             <ExportModal isOpen={exportOpen} onClose={() => setExportOpen(false)} sessionId={sessionId} openGapsCount={openGapCount(bundle.gaps)} artifacts={bundle.artifacts} />
-            {captureOpen && <CaptureModal sessionId={sessionId} sessionMode={bundle.session.mode} onClose={() => setCaptureOpen(false)} onUploaded={async () => { await queryClient.invalidateQueries({ queryKey: BUNDLE_KEY(sessionId) }); }} onProcess={() => process(false)} onStartLive={startLive} />}
+            {captureOpen && <CaptureModal sessionId={sessionId} sessionMode={bundle.session.mode} cloudRunEphemeral={healthQuery.data?.cloudRunEphemeral ?? false} videoUploadsEnabled={healthQuery.data?.videoUploadsEnabled ?? true} maxCaptureRequestBytes={healthQuery.data?.maxCaptureRequestBytes ?? null} onClose={() => setCaptureOpen(false)} onUploaded={async () => { await queryClient.invalidateQueries({ queryKey: BUNDLE_KEY(sessionId) }); }} onProcess={() => process(false)} onStartLive={startLive} />}
           </>}
         </>
       )}

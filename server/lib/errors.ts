@@ -22,6 +22,10 @@ export class HttpError extends Error {
     return new HttpError(400, 'bad_request', message, details);
   }
 
+  static payloadTooLarge(message: string): HttpError {
+    return new HttpError(413, 'payload_too_large', message);
+  }
+
   static notFound(message: string): HttpError {
     return new HttpError(404, 'not_found', message);
   }

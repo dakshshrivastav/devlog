@@ -73,6 +73,9 @@ export interface ProviderConfig {
 export interface Config extends ProviderConfig {
   version: string;
   port: number;
+  cloudRunEphemeral: boolean;
+  videoUploadsEnabled: boolean;
+  maxCaptureRequestBytes: number | null;
   dataDir: string;
   sessionsDir: string;
   outputDir: string;
@@ -102,11 +105,23 @@ function build(): Config {
   const authMode = geminiKey ? 'developer-api' : vertexai ? 'vertex-adc' : 'missing';
   const geminiAvailable = Boolean(geminiKey || (vertexai && project));
   const mockForced = process.env.MOCK === '1' || process.env.MOCK === 'true';
+  const cloudRunEphemeral = process.env.CLOUD_RUN_EPHEMERAL === '1'
+    || process.env.CLOUD_RUN_EPHEMERAL === 'true';
+  const defaultCaptureRequestBytes = 30 * 1024 * 1024;
+  const configuredCaptureRequestBytes = intFrom('MAX_CAPTURE_REQUEST_BYTES', defaultCaptureRequestBytes);
   const dataDir = abs(process.env.DATA_DIR || './data');
 
   return {
     version: readVersion(),
-    port: intFrom('PORT', 8787),
+    port: intFrom('PORT', cloudRunEphemeral ? 8080 : 8787),
+    cloudRunEphemeral,
+    videoUploadsEnabled: !cloudRunEphemeral,
+    maxCaptureRequestBytes: cloudRunEphemeral
+      ? Math.min(
+          configuredCaptureRequestBytes > 0 ? configuredCaptureRequestBytes : defaultCaptureRequestBytes,
+          defaultCaptureRequestBytes
+        )
+      : null,
     dataDir,
     sessionsDir: path.join(dataDir, 'sessions'),
     outputDir: abs(process.env.OUTPUT_DIR || '') || path.join(dataDir, 'out'),

@@ -119,7 +119,7 @@ export function SessionLibrary({
 
         <footer className="mt-12 flex flex-col justify-between gap-3 border-t border-line/50 pt-5 text-[10px] text-muted sm:flex-row sm:items-center">
           <span>Evidence first. Unknowns stay questions.</span>
-          <span className="font-mono uppercase tracking-wider">Private local workspace · v{health?.version ?? '—'}</span>
+          <span className="font-mono uppercase tracking-wider">{health?.cloudRunEphemeral ? 'Public temporary Cloud Run workspace' : 'Private local workspace'} · v{health?.version ?? '—'}</span>
         </footer>
       </div>
 

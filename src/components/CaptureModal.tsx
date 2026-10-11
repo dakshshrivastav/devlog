@@ -4,6 +4,9 @@ import { api } from '../lib/api';
 export function CaptureModal({
   sessionId,
   sessionMode,
+  cloudRunEphemeral,
+  videoUploadsEnabled,
+  maxCaptureRequestBytes,
   onClose,
   onUploaded,
   onProcess,
@@ -11,6 +14,9 @@ export function CaptureModal({
 }: {
   sessionId: string;
   sessionMode: 'batch' | 'live';
+  cloudRunEphemeral: boolean;
+  videoUploadsEnabled: boolean;
+  maxCaptureRequestBytes: number | null;
   onClose: () => void;
   onUploaded: () => Promise<void>;
   onProcess: () => Promise<void>;
@@ -29,11 +35,18 @@ export function CaptureModal({
     setBusy(true);
     setError(null);
     try {
+      const audio = [...(audioRef.current?.files ?? [])];
+      const photos = [...(photoRef.current?.files ?? [])];
+      const videos = [...(videoRef.current?.files ?? [])];
+      const selectedBytes = [...audio, ...photos, ...videos].reduce((sum, file) => sum + file.size, 0);
+      if (maxCaptureRequestBytes && selectedBytes > maxCaptureRequestBytes - 1024 * 1024) {
+        throw new Error(`Keep all selected files below ${Math.floor((maxCaptureRequestBytes - 1024 * 1024) / (1024 * 1024))} MiB total for this upload.`);
+      }
       if (audioRef.current?.files?.length || photoRef.current?.files?.length || videoRef.current?.files?.length || notes.trim() || keyterms.trim()) {
         await api.upload(sessionId, {
-          audio: [...(audioRef.current?.files ?? [])],
-          photos: [...(photoRef.current?.files ?? [])],
-          videos: [...(videoRef.current?.files ?? [])],
+          audio,
+          photos,
+          videos,
           notes,
           keyterms,
         });
@@ -80,13 +93,14 @@ export function CaptureModal({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FilePicker inputRef={audioRef} icon="mic" label="Audio recordings" detail="WAV, MP3, M4A, WebM, OGG" accept="audio/*,.flac" multiple />
             <FilePicker inputRef={photoRef} icon="photo_camera" label="Bench photos" detail="JPG, PNG, WebP, HEIC" accept="image/*,.heic,.heif" multiple />
-            {sessionMode === 'batch' && <FilePicker inputRef={videoRef} icon="videocam" label="Video walkthroughs" detail="MP4, MOV, WebM, MKV · up to 4 clips" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.m4v,.avi" multiple />}
+            {sessionMode === 'batch' && videoUploadsEnabled && <FilePicker inputRef={videoRef} icon="videocam" label="Video walkthroughs" detail="MP4, MOV, WebM, MKV · up to 4 clips" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.m4v,.avi" multiple />}
           </div>
-          <label className="block"><span className="mb-2 block text-xs text-body">Repository path on this machine</span><input value={repoPath} onChange={(e) => setRepoPath(e.target.value)} placeholder="/home/you/project-firmware" className="w-full rounded-lg border border-line bg-surface-0 px-3 py-2.5 font-mono text-xs text-white outline-none placeholder:text-muted focus:border-line-strong" /><span className="mt-1 block text-[10px] text-muted">The local server reads commits with git. This path is never sent to an external provider.</span></label>
+          {!cloudRunEphemeral && <label className="block"><span className="mb-2 block text-xs text-body">Repository path on this machine</span><input value={repoPath} onChange={(e) => setRepoPath(e.target.value)} placeholder="/home/you/project-firmware" className="w-full rounded-lg border border-line bg-surface-0 px-3 py-2.5 font-mono text-xs text-white outline-none placeholder:text-muted focus:border-line-strong" /><span className="mt-1 block text-[10px] text-muted">The local server reads commits with git. This path is never sent to an external provider.</span></label>}
+          {cloudRunEphemeral && <p className="rounded-lg border border-line bg-surface-0 p-3 text-xs text-muted">Repository paths on your computer are not available to this temporary deployment. Add build context as notes or voice evidence instead.</p>}
           <label className="block"><span className="mb-2 block text-xs text-body">Bench notes <span className="text-muted">· optional</span></span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Observations, measurements read aloud, context for this session…" className="w-full resize-y rounded-lg border border-line bg-surface-0 px-3 py-2.5 text-xs leading-relaxed text-white outline-none placeholder:text-muted focus:border-line-strong" /></label>
           <label className="block"><span className="mb-2 block text-xs text-body">Technical keyterms <span className="text-muted">· optional, one per line</span></span><textarea value={keyterms} onChange={(e) => setKeyterms(e.target.value)} rows={2} placeholder="ESP32-WROOM-32\nSRD-05VDC-SL-C\nGPIO 5" className="w-full resize-y rounded-lg border border-line bg-surface-0 px-3 py-2.5 font-mono text-xs leading-relaxed text-white outline-none placeholder:text-muted focus:border-line-strong" /></label>
           {error && <div className="rounded-lg border border-alert/30 bg-alert-deep/15 p-3 text-xs text-alert">{error}</div>}
-          <div className="flex flex-col-reverse justify-between gap-3 border-t border-line pt-4 sm:flex-row sm:items-center"><p className="max-w-md text-[10px] leading-relaxed text-muted">Video audio is transcribed and a few frames are sampled for Gemma. Raw captures stay local; provider keys stay server-side.</p><button disabled={busy} onClick={() => void uploadAndProcess()} className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-medium text-surface-0 disabled:opacity-50"><span className="material-symbols-outlined text-base">{busy ? 'progress_activity' : 'auto_awesome'}</span>{busy ? 'Uploading & processing…' : 'Upload and synthesize'}</button></div>
+          <div className="flex flex-col-reverse justify-between gap-3 border-t border-line pt-4 sm:flex-row sm:items-center"><p className="max-w-md text-[10px] leading-relaxed text-muted">{videoUploadsEnabled ? 'Video audio is transcribed and a few frames are sampled for Gemma. Raw captures stay on this server; provider keys stay server-side.' : 'This temporary deployment accepts audio and photos only. Sessions and captures are stored temporarily and may disappear when the service restarts.'}</p><button disabled={busy} onClick={() => void uploadAndProcess()} className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-medium text-surface-0 disabled:opacity-50"><span className="material-symbols-outlined text-base">{busy ? 'progress_activity' : 'auto_awesome'}</span>{busy ? 'Uploading & processing…' : 'Upload and synthesize'}</button></div>
         </div>
       </div>
     </div>

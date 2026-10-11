@@ -250,6 +250,9 @@ export const HealthResponseSchema = z.object({
     gemini: z.boolean(),
     elevenlabs: z.boolean(),
   }),
+  cloudRunEphemeral: z.boolean().default(false),
+  videoUploadsEnabled: z.boolean().default(true),
+  maxCaptureRequestBytes: z.number().int().positive().nullable().default(null),
   dataDir: z.string(),
 });
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;

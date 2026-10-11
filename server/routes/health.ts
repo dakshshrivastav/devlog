@@ -13,6 +13,9 @@ healthRouter.get('/', (_req, res) => {
       gemini: config.gemini.available,
       elevenlabs: Boolean(config.elevenlabs.apiKey),
     },
+    cloudRunEphemeral: config.cloudRunEphemeral,
+    videoUploadsEnabled: config.videoUploadsEnabled,
+    maxCaptureRequestBytes: config.maxCaptureRequestBytes,
     dataDir: config.dataDir,
   });
 });

@@ -7,8 +7,9 @@
 import path from 'node:path';
 import { readdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { Router, type Request, type Response } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import multer from 'multer';
+import { config } from '../config';
 import { ensureSessionDirs, getSession } from '../store/sessionStore';
 import { HttpError } from '../lib/errors';
 
@@ -106,18 +107,48 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 256 * 1024 * 1024, files: 64, fields: 8 },
+  limits: {
+    fileSize: config.maxCaptureRequestBytes ?? 256 * 1024 * 1024,
+    files: 64,
+    fields: 8,
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.fieldname === 'videos' && !config.videoUploadsEnabled) {
+      cb(HttpError.badRequest('Video uploads are disabled in the ephemeral Cloud Run profile.'));
+      return;
+    }
+    cb(null, true);
+  },
 });
+
+const parseCapture = upload.fields([
+  { name: 'audio', maxCount: 24 },
+  { name: 'photos', maxCount: 40 },
+  { name: 'videos', maxCount: 4 },
+]);
+
+function captureUpload(req: Request, res: Response, next: NextFunction): void {
+  const maxBytes = config.maxCaptureRequestBytes;
+  const contentLength = Number(req.headers['content-length']);
+  if (maxBytes && Number.isFinite(contentLength) && contentLength > maxBytes) {
+    next(HttpError.payloadTooLarge(`Capture uploads must be smaller than ${Math.floor(maxBytes / (1024 * 1024))} MiB per request.`));
+    return;
+  }
+
+  parseCapture(req, res, (err) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      next(HttpError.payloadTooLarge('A capture file exceeds the configured upload limit.'));
+      return;
+    }
+    next(err);
+  });
+}
 
 export const captureRouter = Router({ mergeParams: true });
 
 captureRouter.post(
   '/',
-  upload.fields([
-    { name: 'audio', maxCount: 24 },
-    { name: 'photos', maxCount: 40 },
-    { name: 'videos', maxCount: 4 },
-  ]),
+  captureUpload,
   async (req: Request, res: Response) => {
     const sessionId = (req.params as { id: string }).id;
     const session = await getSession(sessionId);
