@@ -15,8 +15,9 @@ The product's central constraint is trustworthiness: claims, notes, diagram node
 ## 2. Current project state
 
 - A working application source tree and `.gitignore` now exist.
+- Recorded sessions accept local video uploads; FFmpeg extracts Scribe audio and bounded timestamped frames for Gemma.
 - Git repository initialized on `main`; baseline `f3265fb` and application foundation `d2aa2c2` use the planned messages.
-- Automated verification: strict client/server TypeScript checks, fixture-backed Vitest tests, production Vite build, and local API smoke tests pass. No billed provider call or real microphone/provider run has been performed.
+- Automated verification: strict client/server TypeScript checks, fixture-backed Vitest tests, production Vite build, and local API smoke tests pass. Synthetic live smoke tests exercised Vertex Gemma, Scribe batch/realtime, and video upload/extraction; user-recorded capture quality, quotas, and billing remain unverified.
 - Git evidence is read-only: Devlog extracts full commit IDs, author timestamps, and subjects through NUL-delimited `git log` output. It does not rewrite or stage repository history.
 - Existing planning and reference files to preserve:
   - `idea.md`
@@ -39,7 +40,7 @@ The product's central constraint is trustworthiness: claims, notes, diagram node
 - **Hosted generation:** `@google/genai` supports Gemini Developer API (`GEMINI_API_KEY`, default `gemma-4-26b-a4b-it`) or Vertex ADC (default `gemma-4-26b-a4b-it-maas` at `global`). ADC project is read from `GOOGLE_CLOUD_PROJECT` or the ADC quota project; `GEMMA_MODEL` may override the mode default. The configured Vertex MaaS model has been live-tested with this project's ADC.
 - **Speech:** Scribe v2 batch transcription for recorded sessions; Scribe v2 Realtime WebSocket for live sessions. The long-lived key stays server-side and live browser connections use single-use tokens.
 - **Live graph:** Gemma updates an append-only idea graph from committed transcript chunks; server history and current graph state are kept separately.
-- **Gap interview:** typed answers are implemented; spoken gap answers remain a follow-up.
+- **Gap interview:** typed and spoken answers are implemented; both become evidence and can update their targeted structured entries.
 - **Timeline policy:** timezone-aware items sort by normalized UTC instant; timezone-naive EXIF values remain naive and follow aware instants; untimed evidence follows dated evidence; ties break by stable source ID. Speech-to-commit association is not implemented.
 - **Generated output:** session-local under the ignored `DATA_DIR`, downloadable as a ZIP; never written into the target Git repository automatically.
 - **Mermaid:** sourced hardware/idea graph structures are serialized into a restricted flowchart subset, validated server-side, and rendered by Mermaid.js in the browser.
@@ -158,7 +159,6 @@ Implement one milestone at a time. After each milestone, report the files/featur
 
 ### Later scope
 
-- Video ingestion with ffmpeg audio extraction and capped, timestamped frame sampling.
 - Spoken gap questions using ElevenLabs text-to-speech.
 - `DEVLOG.md`, `BOM.md`, `TROUBLESHOOTING.md`, and additional supported diagrams.
 - Optional Mermaid SVG rendering; `.mmd` remains canonical.

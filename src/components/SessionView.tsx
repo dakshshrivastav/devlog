@@ -196,7 +196,7 @@ function Overview({
 
         <div className="flex flex-col gap-8 xl:col-span-5">
           <section>
-            <SectionTitle title="Visual evidence" meta="Bench captures from this session" />
+            <SectionTitle title="Visual evidence" meta="Bench photos and sampled video frames" />
             {photos.length ? (
               <div className="grid grid-cols-2 gap-3">
                 {photos.slice(0, 4).map((item) => (
@@ -278,11 +278,12 @@ function Timeline({ bundle, onPhoto, onSelectView }: { bundle: SessionBundle; on
 }
 
 function EvidenceCard({ item, sessionId, allowAudio, onPhoto }: { item: EvidenceItem; sessionId: string; allowAudio: boolean; onPhoto: PhotoHandler }) {
-  const icon = item.kind === 'voice' ? 'mic' : item.kind === 'photo' ? 'photo_camera' : item.kind === 'commit' ? 'terminal' : item.kind === 'measurement' ? 'speed' : 'edit_note';
+  const icon = item.kind === 'voice' ? 'mic' : item.photo?.videoFrame ? 'movie' : item.kind === 'photo' ? 'photo_camera' : item.kind === 'commit' ? 'terminal' : item.kind === 'measurement' ? 'speed' : 'edit_note';
+  const kindLabel = item.photo?.videoFrame ? 'video frame' : item.kind;
   return (
     <article className="relative z-10 ml-10 rounded-xl border border-line bg-surface-2 p-4 transition-colors hover:border-line-strong sm:p-5">
       <span className="absolute -left-[31px] top-5 grid h-5 w-5 place-items-center rounded-full border border-line-strong bg-surface-0"><span className="material-symbols-outlined text-[11px] text-body">{icon}</span></span>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2 font-mono text-[11px] text-white"><span>{formatClock(item.instant)}</span><span className="text-line-dim">·</span><span className="capitalize text-muted">{item.kind}</span></div><Pill>{item.sourceTag}</Pill></div>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2 font-mono text-[11px] text-white"><span>{formatClock(item.instant)}</span><span className="text-line-dim">·</span><span className="capitalize text-muted">{kindLabel}</span></div><Pill>{item.sourceTag}</Pill></div>
       <h3 className="font-headline text-base font-normal text-white">{item.label}</h3>
       {(item.detail || item.voice?.quote) && <p className="mt-1.5 text-sm font-light leading-relaxed text-body">{item.voice?.quote ?? item.detail}</p>}
       {item.commit?.diff?.length ? <pre className="mt-3 overflow-x-auto rounded-lg bg-surface-0 p-3 font-mono text-[11px] leading-relaxed text-body">{item.commit.diff.map((line) => <span key={`${line.lineNum}-${line.kind}`} className={`block ${line.kind === 'added' ? 'text-white' : line.kind === 'removed' ? 'text-alert' : 'text-muted'}`}>{line.kind === 'added' ? '+' : line.kind === 'removed' ? '-' : ' '} {line.content}</span>)}</pre> : null}

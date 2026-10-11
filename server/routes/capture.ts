@@ -1,9 +1,8 @@
 /**
  * Capture upload.
  *
- * Stores audio and photos into the session's immutable `capture/` directory
- * under stable media ids (`audio-1.webm`, `photo-2.jpg`) that evidence items
- * reference later. Building evidence from these files is the pipeline's job.
+ * Stores audio, photos, and videos into the session's immutable `capture/`
+ * directory under stable media ids that later pipeline stages can reference.
  */
 import path from 'node:path';
 import { readdir, writeFile } from 'node:fs/promises';
@@ -15,16 +14,19 @@ import { HttpError } from '../lib/errors';
 
 const AUDIO_EXT = new Set(['.wav', '.mp3', '.m4a', '.ogg', '.webm', '.flac', '.aac', '.opus']);
 const PHOTO_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif']);
+const VIDEO_EXT = new Set(['.mp4', '.mov', '.m4v', '.webm', '.mkv', '.avi']);
 
 const counters = new WeakMap<Request, Record<string, number>>();
 
 function fieldPrefix(fieldname: string): string {
-  return fieldname === 'audio' ? 'audio' : 'photo';
+  if (fieldname === 'audio') return 'audio';
+  if (fieldname === 'videos') return 'video';
+  return 'photo';
 }
 
 function safeExt(originalName: string, mimetype: string, fieldname: string): string {
   const ext = path.extname(originalName).toLowerCase();
-  const allowed = fieldname === 'audio' ? AUDIO_EXT : PHOTO_EXT;
+  const allowed = fieldname === 'audio' ? AUDIO_EXT : fieldname === 'videos' ? VIDEO_EXT : PHOTO_EXT;
   if (allowed.has(ext)) return ext;
   if (fieldname === 'audio') {
     if (mimetype.includes('webm')) return '.webm';
@@ -33,6 +35,13 @@ function safeExt(originalName: string, mimetype: string, fieldname: string): str
     if (mimetype.includes('mp4') || mimetype.includes('m4a')) return '.m4a';
     if (mimetype.includes('ogg')) return '.ogg';
     return '.webm';
+  }
+  if (fieldname === 'videos') {
+    if (mimetype.includes('webm')) return '.webm';
+    if (mimetype.includes('quicktime')) return '.mov';
+    if (mimetype.includes('matroska')) return '.mkv';
+    if (mimetype.includes('x-msvideo')) return '.avi';
+    return '.mp4';
   }
   if (mimetype.includes('png')) return '.png';
   if (mimetype.includes('webp')) return '.webp';
@@ -57,7 +66,12 @@ const storage = multer.diskStorage({
       const sessionId = (req.params as { id?: string }).id;
       if (!sessionId) throw HttpError.badRequest('Missing session id.');
       const paths = await ensureSessionDirs(sessionId);
-      cb(null, file.fieldname === 'audio' ? paths.audio : paths.photos);
+      const destination = file.fieldname === 'audio'
+        ? paths.audio
+        : file.fieldname === 'videos'
+          ? paths.videos
+          : paths.photos;
+      cb(null, destination);
     } catch (err) {
       cb(err as Error, '');
     }
@@ -68,7 +82,11 @@ const storage = multer.diskStorage({
       if (!sessionId) throw HttpError.badRequest('Missing session id.');
       const paths = await ensureSessionDirs(sessionId);
       const prefix = fieldPrefix(file.fieldname);
-      const dir = file.fieldname === 'audio' ? paths.audio : paths.photos;
+      const dir = file.fieldname === 'audio'
+        ? paths.audio
+        : file.fieldname === 'videos'
+          ? paths.videos
+          : paths.photos;
 
       let perRequest = counters.get(req);
       if (!perRequest) {
@@ -98,6 +116,7 @@ captureRouter.post(
   upload.fields([
     { name: 'audio', maxCount: 24 },
     { name: 'photos', maxCount: 40 },
+    { name: 'videos', maxCount: 4 },
   ]),
   async (req: Request, res: Response) => {
     const sessionId = (req.params as { id: string }).id;
@@ -108,10 +127,11 @@ captureRouter.post(
     const files = (req.files ?? {}) as Record<string, Express.Multer.File[]>;
     const audio = files.audio ?? [];
     const photos = files.photos ?? [];
+    const videos = files.videos ?? [];
 
-    for (const file of [...audio, ...photos]) {
+    for (const file of [...audio, ...photos, ...videos]) {
       const ext = path.extname(file.filename).toLowerCase();
-      const allowed = audio.includes(file) ? AUDIO_EXT : PHOTO_EXT;
+      const allowed = audio.includes(file) ? AUDIO_EXT : videos.includes(file) ? VIDEO_EXT : PHOTO_EXT;
       if (!allowed.has(ext)) {
         throw HttpError.badRequest(`Unsupported capture type "${ext || file.originalname}".`);
       }
@@ -129,6 +149,7 @@ captureRouter.post(
       stored: {
         audio: audio.map((f) => ({ mediaId: path.parse(f.filename).name, filename: f.filename, bytes: f.size })),
         photos: photos.map((f) => ({ mediaId: path.parse(f.filename).name, filename: f.filename, bytes: f.size })),
+        videos: videos.map((f) => ({ mediaId: path.parse(f.filename).name, filename: f.filename, bytes: f.size })),
         notes: notes.trim().length > 0,
         keyterms: keyterms.trim().length > 0,
       },

@@ -14,6 +14,7 @@ import { formatClock, formatClockSeconds } from '../../shared/format';
 import type { SessionPaths } from '../store/sessionStore';
 import { exifToSortableInstant, readPhotoExif } from '../providers/exif';
 import { readCommitDiff, type GitRepoInfo } from '../providers/git';
+import type { VideoFrameAsset } from './video';
 
 const PHOTO_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif']);
 const AUDIO_EXT = new Set(['.wav', '.mp3', '.m4a', '.ogg', '.webm', '.flac', '.aac', '.opus']);
@@ -239,12 +240,51 @@ export interface BuildEvidenceInput {
   transcript: Transcript | null;
   repo: GitRepoInfo | null;
   sessionId: string;
+  videoFrames?: readonly VideoFrameAsset[];
+}
+
+function videoClock(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = (seconds - minutes * 60).toFixed(1).padStart(4, '0');
+  return `${String(minutes).padStart(2, '0')}:${remainder}`;
+}
+
+function videoFrameEvidence(frames: readonly VideoFrameAsset[], sessionId: string): EvidenceItem[] {
+  return frames.map((frame, index) => {
+    const timestamp = videoClock(frame.timeSec);
+    const recordedAt = Date.parse(frame.videoMtime);
+    const instant = Number.isFinite(recordedAt) && frame.durationSec !== null
+      ? new Date(recordedAt - Math.max(0, frame.durationSec - frame.timeSec) * 1000).toISOString()
+      : frame.videoMtime;
+    return {
+      id: `ev-${frame.mediaId}`,
+      kind: 'photo',
+      sourceTag: `video ${frame.videoIndex} frame ${String(frame.frameIndex).padStart(2, '0')}`,
+      label: `Frame from ${frame.videoName} at ${timestamp}`,
+      detail: `Sampled from the video at ${timestamp}.`,
+      instant,
+      instantIsNaive: false,
+      order: index + 1,
+      sources: [],
+      verification: `FFmpeg frame sampled at ${timestamp} from ${frame.videoName}`,
+      photo: {
+        mediaId: frame.mediaId,
+        url: `/api/sessions/${encodeURIComponent(sessionId)}/media/${encodeURIComponent(frame.mediaId)}`,
+        caption: `${frame.videoName} · ${timestamp}`,
+        exif: { takenAt: instant, note: 'sampled video frame' },
+        videoFrame: { videoId: frame.videoId, timeSec: frame.timeSec },
+      },
+    };
+  });
 }
 
 export async function buildEvidence(input: BuildEvidenceInput): Promise<EvidenceItem[]> {
-  const { paths, transcript, repo, sessionId } = input;
+  const { paths, transcript, repo, sessionId, videoFrames = [] } = input;
 
-  const audioFilesRaw = await listFiles(paths.audio, AUDIO_EXT);
+  const audioFilesRaw = [
+    ...(await listFiles(paths.audio, AUDIO_EXT)),
+    ...(await listFiles(paths.videoAudio, AUDIO_EXT)),
+  ];
   const audioFiles = await Promise.all(
     audioFilesRaw.map(async (file) => ({ file, mtimeMs: (await stat(file)).mtimeMs }))
   );
@@ -277,8 +317,9 @@ export async function buildEvidence(input: BuildEvidenceInput): Promise<Evidence
       ? { ...item, photo: { ...item.photo, url: `/api/sessions/${sessionId}/media/${item.photo.mediaId}` } }
       : item
   );
+  const videoFramesWithUrls = videoFrameEvidence(videoFrames, sessionId);
 
-  const all = [...voices, ...withUrls, ...notes, ...commits];
+  const all = [...voices, ...withUrls, ...videoFramesWithUrls, ...notes, ...commits];
   const sorted = sortTimeable(all);
 
   // Re-index so `order` is a dense, stable tie-breaker over the whole timeline.

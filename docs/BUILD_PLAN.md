@@ -18,11 +18,15 @@ which remains the source for provider research and acceptance checks C1–C18.
   a separate clear-note hardware extraction produced five nodes and four edges. An incomplete
   optional measurement no longer invalidates the whole hardware graph. Browser microphone UX
   and a user-recorded capture remain unverified.
+- **Recorded video ingest is implemented and smoke-tested.** An MP4 uploaded through the API was
+  retained; FFmpeg extracted its audio and four timestamped JPEG frames, Scribe returned two
+  transcript segments, and Gemma generated a two-node hardware graph that parsed as Mermaid.
+  FFmpeg/ffprobe must be installed on the local machine.
 - **Realtime transport is wired.** The server mints one-use Scribe tokens; browser AudioWorklet
   converts mic input to 16 kHz PCM; raw provider events are appended before transcript
   processing. Live idea synthesis is debounced and appends graph history when Gemini is
-  configured. Provider-account audio verification remains unrun because this environment has
-  no provider credentials.
+  configured. Provider endpoints were smoke-tested with short synthetic audio; browser
+  microphone permission and capture quality remain unverified.
 - **Spoken gap answers are wired.** The browser records an answer; the server transcribes it
   with batch Scribe, retains raw response/audio, and stores the transcript as evidence before
   applying structured write-back.
@@ -143,10 +147,13 @@ data/sessions/<id>/
   capture/
     audio/<n>.<ext>     immutable inputs
     photos/<n>.<ext>
+    videos/<n>.<ext>
     notes.txt
     keyterms.txt
   raw/
     stt/<audioId>.json  complete provider response, never edited
+    video-audio/         derived mono 16 kHz WAV tracks
+    video-frames/        derived timestamped JPEG samples
     live.jsonl          every realtime event, appended before any model call
     git.json            commit snapshots with diffs
   transcript.json       normalized segments + word spans
@@ -318,8 +325,8 @@ bundle.
 3. EXIF timestamps via `exifr`; git commits and diffs via `git log --numstat` scoped to the
    session window.
 4. Deterministic time-sorted timeline with stable ids and source tags.
-5. One Gemma call per artifact, prompts in `server/prompts/`, at most 8 photos per call,
-   5 MiB each, 20 MiB total inline.
+5. One Gemma call per artifact, prompts in `server/prompts/`, at most 8 photos/video frames per call,
+   5 MiB each, 20 MiB total inline. Video contributes extracted audio plus sparse frames, never raw video.
 6. Validators run on every output. Retry once on invalid; if still invalid, omit the artifact
    and file a gap question. Never save malformed Mermaid or unsupported claims.
 

@@ -12,7 +12,7 @@ The other views cover the evidence timeline, observer notes and gaps, BOM, troub
 
 ## Run locally
 
-Requires Node.js 22 or newer.
+Requires Node.js 22 or newer. Video processing additionally requires `ffmpeg` and `ffprobe` on `PATH`.
 
 ```bash
 npm install
@@ -30,8 +30,8 @@ With neither Google auth nor an ElevenLabs key, Devlog runs in mock mode and ope
 ### First real session
 
 1. Open <http://localhost:3000> and create a **Recorded session**.
-2. Add a short voice recording, optional bench photos/notes/keyterms, and optionally a repository path.
-3. Choose **Upload and synthesize**. Scribe transcribes audio; Gemma turns the transcript and other evidence into documentation and graphs.
+2. Add a short voice recording, video walkthrough, optional bench photos/notes/keyterms, and optionally a repository path.
+3. Choose **Upload and synthesize**. Video audio is extracted for Scribe, and up to four timestamped frames are sampled for Gemma. Gemma combines the transcript and other evidence into documentation and graphs.
 4. If you only have notes, photos, or Git history, skip audio; Gemma can still synthesize those inputs without an ElevenLabs key.
 
 For live capture, create a **Live bench session**, choose **Add evidence → Prepare live session**, then allow microphone access and start capture.
@@ -47,6 +47,7 @@ Copy `.env.example` to `.env` and set:
 | `GOOGLE_CLOUD_LOCATION` | Vertex location; defaults to `global` for Gemma MaaS |
 | `ELEVENLABS_API_KEY` | Scribe v2 batch transcription and minting single-use realtime tokens |
 | `GEMMA_MODEL` | Optional model override; defaults to `gemma-4-26b-a4b-it-maas` on Vertex ADC |
+| `MAX_VIDEO_FRAMES` | Maximum video frames sampled for Gemma per session; default `4` |
 | `DATA_DIR` | Session data directory; default `./data` (gitignored) |
 | `PORT` | Express API port; default `8787` |
 | `MOCK` | Set `1` to serve fixtures and skip provider requests |
@@ -54,10 +55,11 @@ Copy `.env.example` to `.env` and set:
 ## Using the workspace
 
 1. Create a **recorded** session or a **live** bench session.
-2. Recorded mode accepts audio, photos, optional notes/keyterms, and a path to a local Git repository. Press **Upload and synthesize** to build the timeline and documentation.
-3. Live mode requests microphone permission, streams 16 kHz mono PCM to Scribe v2 Realtime using a server-minted single-use token, and appends every provider event to the session before processing committed transcripts.
-4. Review unresolved details in **Observations**. Resolve a gap by typing or recording a spoken answer; spoken answers are transcribed by Scribe and stored as new evidence. The answer updates the affected structured row and regenerates the artifacts.
-5. Download the bundle from **Export**. Generated files remain in the local session data directory and are never written into the hardware repository automatically.
+2. Recorded mode accepts audio, video clips, photos, optional notes/keyterms, and a path to a local Git repository. For video clips, Devlog extracts the audio track for Scribe and samples up to four timestamped frames for Gemma.
+3. Press **Upload and synthesize** to build the timeline and documentation.
+4. Live mode requests microphone permission, streams 16 kHz mono PCM to Scribe v2 Realtime using a server-minted single-use token, and appends every provider event to the session before processing committed transcripts.
+5. Review unresolved details in **Observations**. Resolve a gap by typing or recording a spoken answer; spoken answers are transcribed by Scribe and stored as new evidence. The answer updates the affected structured row and regenerates the artifacts.
+6. Download the bundle from **Export**. Generated files remain in the local session data directory and are never written into the hardware repository automatically.
 
 ## Storage and outputs
 
@@ -78,7 +80,7 @@ Normal tests do not call paid APIs. The ADC/Gemma text-and-image path, Scribe ba
 
 - Provider API keys stay in the local server process. The browser receives only a short-lived Scribe token for live transcription.
 - Session captures, transcripts, provider responses, generated output and `.env` are gitignored by default. The prepared fixture is tracked.
-- The Gemini provider forwards selected session evidence and supported images to Google. ElevenLabs receives audio sent for transcription. Review provider terms and the session data before processing private captures.
+- The Gemini provider forwards selected session evidence, supported photos, and sampled video frames to Google. ElevenLabs receives audio sent for transcription, including extracted video audio. Review provider terms and session data before processing private captures.
 - Measurements are only reported when present in spoken or typed evidence or Git data; photos are not used to invent numeric readings.
 - The model's source references are resolved against real evidence ids. Diagram syntax is validated before writing; unknown citations and unsupported graph elements are dropped.
 

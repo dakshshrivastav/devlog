@@ -43,6 +43,7 @@ import { isGitRepo, readCommits, type GitRepoInfo } from '../providers/git';
 import { readKeyterms, transcribeSession } from '../providers/elevenlabs';
 import type { ImageInput } from '../providers/gemini';
 import { buildEvidence } from './timeline';
+import { extractVideoAssets, listVideoFiles } from './video';
 import {
   buildTagIndex,
   mergeIdeaGraphs,
@@ -127,14 +128,22 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
 
   const audioFiles = await listCapture(paths.audio, AUDIO_EXT);
   const photoFiles = await listCapture(paths.photos, PHOTO_EXT);
+  const videoFiles = await listVideoFiles(paths.videos);
+  const videoAssets = await extractVideoAssets(paths, videoFiles, config.limits.maxVideoFrames);
   const keyterms = await readKeyterms(paths.capture);
 
   await emit(sessionId, 'log', {
-    message: `${audioFiles.length} audio file(s), ${photoFiles.length} photo(s), ${keyterms.length} keyterm(s).`,
+    message: `${audioFiles.length} audio file(s), ${photoFiles.length} photo(s), ${videoFiles.length} video(s), ${videoAssets.audioPaths.length} video audio track(s), ${videoAssets.frames.length} sampled frame(s), ${keyterms.length} keyterm(s).`,
   });
+  for (const videoName of videoAssets.videosWithoutAudio) {
+    await emit(sessionId, 'log', {
+      message: `${videoName} has no audio track; its sampled frames will still be analyzed.`,
+      level: 'warn',
+    });
+  }
 
   const notesPath = path.join(paths.capture, 'notes.txt');
-  if (audioFiles.length === 0 && photoFiles.length === 0 && !existsSync(notesPath) && !session.repoPath) {
+  if (audioFiles.length === 0 && photoFiles.length === 0 && videoFiles.length === 0 && !existsSync(notesPath) && !session.repoPath) {
     throw HttpError.unprocessable(
       'This session has no audio, no photos and no repository path. Upload a capture first.'
     );
@@ -143,6 +152,10 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
   /* ----------------------------- transcribe ----------------------------- */
   await setStage(sessionId, 'transcribe', 0.2, 'Transcribing speech');
 
+  const transcriptionFiles = [
+    ...audioFiles.map((file) => ({ audioId: path.parse(file.name).name, path: file.absolute })),
+    ...videoAssets.audioPaths,
+  ];
   let transcript: Transcript;
   if (options.synthesizeOnly) {
     transcript = await readJson<Transcript>(
@@ -152,16 +165,16 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
       emptyTranscript()
     );
     await emit(sessionId, 'log', { message: 'Reusing the stored transcript.', level: 'warn' });
-  } else if (audioFiles.length > 0) {
+  } else if (transcriptionFiles.length > 0) {
     if (!config.elevenlabs.apiKey) {
       throw HttpError.unprocessable(
-        'Audio was captured but ELEVENLABS_API_KEY is not set, so it cannot be transcribed.'
+        'Audio was captured or extracted from video but ELEVENLABS_API_KEY is not set, so it cannot be transcribed.'
       );
     }
     transcript = await transcribeSession({
       sessionId,
       sessionDir: paths.dir,
-      audioPaths: audioFiles.map((f) => ({ audioId: path.parse(f.name).name, path: f.absolute })),
+      audioPaths: transcriptionFiles,
       keyterms,
     });
     await writeJson(sessionId, FILES.transcript, transcript);
@@ -211,13 +224,19 @@ async function execute(sessionId: string, options: BatchOptions): Promise<void> 
 
   const baseEvidence = options.synthesizeOnly
     ? bundle.evidence.filter((item) => !item.id.startsWith('ev-measure-'))
-    : await buildEvidence({ paths, transcript, repo, sessionId });
+    : await buildEvidence({ paths, transcript, repo, sessionId, videoFrames: videoAssets.frames });
   await emit(sessionId, 'evidence', { message: `${baseEvidence.length} evidence item(s) assembled.` });
 
   /* ------------------------------ synthesize ---------------------------- */
   await setStage(sessionId, 'synthesize', 0.62, `Synthesizing via ${providerLabel()}`);
 
-  const images = await loadImages(photoFiles);
+  const videoFrameFiles = videoAssets.frames.map((frame) => ({ name: frame.name, absolute: frame.path }));
+  const videoSlots = Math.min(videoFrameFiles.length, config.limits.maxPhotosPerCall);
+  const imageFiles = [
+    ...photoFiles.slice(0, config.limits.maxPhotosPerCall - videoSlots),
+    ...videoFrameFiles.slice(0, config.limits.maxPhotosPerCall),
+  ];
+  const images = await loadImages(imageFiles);
   const index = buildTagIndex(baseEvidence);
   const ctx: SynthesisContext = { session, evidence: baseEvidence, index, images };
   const missing: string[] = [];

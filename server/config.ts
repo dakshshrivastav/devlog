@@ -86,6 +86,7 @@ export interface Config extends ProviderConfig {
   mockForced: boolean;
   limits: {
     maxPhotosPerCall: number;
+    maxVideoFrames: number;
     maxPhotoBytes: number;
     maxInlinePayloadBytes: number;
   };
@@ -131,6 +132,7 @@ function build(): Config {
     mockForced,
     limits: {
       maxPhotosPerCall: intFrom('MAX_PHOTOS_PER_CALL', 8),
+      maxVideoFrames: intFrom('MAX_VIDEO_FRAMES', 4),
       maxPhotoBytes: intFrom('MAX_PHOTO_BYTES', 5 * 1024 * 1024),
       maxInlinePayloadBytes: intFrom('MAX_INLINE_PAYLOAD_BYTES', 20 * 1024 * 1024),
     },

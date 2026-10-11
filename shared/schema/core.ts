@@ -56,6 +56,8 @@ export const PhotoPayloadSchema = z.object({
   /** Resolved by the store: `/api/sessions/:id/media/...` or a remote fixture URL. */
   url: z.string(),
   caption: z.string().optional(),
+  /** Present when this photo is a timestamped frame sampled from a video. */
+  videoFrame: z.object({ videoId: z.string(), timeSec: z.number() }).optional(),
   exif: z
     .object({
       takenAt: z.string().nullish(),

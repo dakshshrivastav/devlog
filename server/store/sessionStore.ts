@@ -95,8 +95,11 @@ export interface SessionPaths {
   capture: string;
   audio: string;
   photos: string;
+  videos: string;
   raw: string;
   stt: string;
+  videoAudio: string;
+  videoFrames: string;
   ideas: string;
   hardware: string;
   diagrams: string;
@@ -111,8 +114,11 @@ export function pathsFor(sessionId: string): SessionPaths {
     capture: path.join(dir, 'capture'),
     audio: path.join(dir, 'capture', 'audio'),
     photos: path.join(dir, 'capture', 'photos'),
+    videos: path.join(dir, 'capture', 'videos'),
     raw: path.join(dir, 'raw'),
     stt: path.join(dir, 'raw', 'stt'),
+    videoAudio: path.join(dir, 'raw', 'video-audio'),
+    videoFrames: path.join(dir, 'raw', 'video-frames'),
     ideas: path.join(dir, 'ideas'),
     hardware: path.join(dir, 'hardware'),
     diagrams: path.join(dir, 'hardware', 'diagrams'),
@@ -125,7 +131,10 @@ export async function ensureSessionDirs(sessionId: string): Promise<SessionPaths
   await mkdir(paths.artifacts, { recursive: true });
   await mkdir(paths.audio, { recursive: true });
   await mkdir(paths.photos, { recursive: true });
+  await mkdir(paths.videos, { recursive: true });
   await mkdir(paths.stt, { recursive: true });
+  await mkdir(paths.videoAudio, { recursive: true });
+  await mkdir(paths.videoFrames, { recursive: true });
   await mkdir(paths.ideas, { recursive: true });
   await mkdir(paths.diagrams, { recursive: true });
   return paths;
@@ -508,7 +517,13 @@ export function resolveArtifactPath(sessionId: string, name: string): ResolvedFi
   return { absolute, rel: path.join('artifacts', clean) };
 }
 
-const MEDIA_DIRS = ['capture/photos', 'capture/audio'] as const;
+const MEDIA_DIRS = [
+  'capture/photos',
+  'capture/audio',
+  'capture/videos',
+  'raw/video-frames',
+  'raw/video-audio',
+] as const;
 
 const CONTENT_TYPES: Record<string, string> = {
   '.png': 'image/png',
@@ -521,6 +536,11 @@ const CONTENT_TYPES: Record<string, string> = {
   '.m4a': 'audio/mp4',
   '.ogg': 'audio/ogg',
   '.webm': 'audio/webm',
+  '.mp4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.m4v': 'video/x-m4v',
+  '.mkv': 'video/x-matroska',
+  '.avi': 'video/x-msvideo',
   '.md': 'text/markdown; charset=utf-8',
   '.mmd': 'text/plain; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
@@ -544,9 +564,12 @@ export async function resolveMedia(
     const entries = await readdir(base);
     const match = entries.find((name) => name === safe || name.startsWith(`${safe}.`));
     if (match) {
+      const contentType = dir === 'capture/videos' && path.extname(match).toLowerCase() === '.webm'
+        ? 'video/webm'
+        : contentTypeFor(match);
       return {
         absolute: path.join(base, match),
-        contentType: contentTypeFor(match),
+        contentType,
       };
     }
   }

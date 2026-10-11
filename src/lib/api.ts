@@ -72,13 +72,14 @@ export const api = {
     request<{ runId: string; sessionId: string; message: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/live/end`, { method: 'POST' }),
   cancelLive: (sessionId: string) =>
     request<{ sessionId: string; status: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/live/cancel`, { method: 'POST' }),
-  upload: async (sessionId: string, files: { audio: File[]; photos: File[]; notes?: string; keyterms?: string }) => {
+  upload: async (sessionId: string, files: { audio: File[]; photos: File[]; videos: File[]; notes?: string; keyterms?: string }) => {
     const form = new FormData();
     files.audio.forEach((file) => form.append('audio', file));
     files.photos.forEach((file) => form.append('photos', file));
+    files.videos.forEach((file) => form.append('videos', file));
     if (files.notes) form.append('notes', files.notes);
     if (files.keyterms) form.append('keyterms', files.keyterms);
-    return request<{ stored: { audio: unknown[]; photos: unknown[] }; nextStep: string }>(
+    return request<{ stored: { audio: unknown[]; photos: unknown[]; videos: unknown[] }; nextStep: string }>(
       `/api/sessions/${encodeURIComponent(sessionId)}/capture`,
       { method: 'POST', body: form }
     );
