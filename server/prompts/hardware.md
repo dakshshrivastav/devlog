@@ -32,8 +32,11 @@ present in a commit.
    connection. `inferred: true` when the connection is implied by the evidence rather than
    stated — inferred edges still need a citation.
 8. Measurements: report only values stated in the evidence. `role` is `baseline` (steady
-   state), `event` (the fault or transient), `threshold` (a documented limit) or `result`
-   (after the fix).
+    state), `event` (the fault or transient), `threshold` (a documented limit) or `result`
+    (after the fix). Every measurement object MUST include both `quantity` and `value` as
+    strings. Put the numeric reading in `value` and its unit in `unit` (for example
+    `{"quantity":"5 V rail","value":"5","unit":"V"}`). If there is no explicit
+    measured reading, return an empty `measurements` array; do not omit `value` from an item.
 9. Do not invent a component that makes the circuit "complete". An unpopulated or unknown
    part is a gap, not a node.
 

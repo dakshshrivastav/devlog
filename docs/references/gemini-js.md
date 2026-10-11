@@ -1,6 +1,6 @@
 # Gemini Developer API — Node.js integration
 
-Checked **2026-10-11** against the installed `@google/genai@2.28.0` type declarations and the official JavaScript SDK documentation. This is the interface used by the current Node/TypeScript implementation; the older Python SDK notes in [`gemma4-gemini-api.md`](gemma4-gemini-api.md) remain historical provider research.
+Checked **2026-10-11** against the installed `@google/genai@2.28.0` type declarations and the official JavaScript SDK documentation. This note covers the optional Gemini Developer API / AI Studio API-key mode. The app also supports the Vertex AI ADC mode described in [`gemma4-vertex-adc.md`](gemma4-vertex-adc.md), which is the default when ADC is present and no `GEMINI_API_KEY` is set.
 
 ## Call shape
 

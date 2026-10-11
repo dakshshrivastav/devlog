@@ -4,13 +4,14 @@ Checked on **2026-10-10**. These are implementation notes, not guarantees of acc
 
 - [Gemma 4 on the Gemini Developer API](gemma4-gemini-api.md)
 - [Gemini Developer API — Node.js integration](gemini-js.md)
+- [Gemma 4 MaaS on Vertex AI with ADC](gemma4-vertex-adc.md)
 - [ElevenLabs Scribe v2 batch transcription](elevenlabs-batch-stt.md)
 - [ElevenLabs Scribe v2 Realtime transcription](elevenlabs-realtime-stt.md)
 - [Local faster-whisper fallback](whisper-local.md)
 
 ## Selected v1 integration
 
-Devlog uses the Gemini Developer API (not Google Cloud MaaS) and its hosted `gemma-4-26b-a4b-it` model through the Node.js `@google/genai` SDK. Recorded speech uses ElevenLabs Scribe v2 batch transcription; live browser speech uses Scribe v2 Realtime with server-minted single-use tokens. Local faster-whisper, ElevenAgents, TTS, and Cloud MaaS are not currently wired into the application.
+Devlog supports either the Gemini Developer API (`GEMINI_API_KEY`, model `gemma-4-26b-a4b-it`) or Vertex AI ADC (model `gemma-4-26b-a4b-it-maas`, global location) through the Node.js `@google/genai` SDK. Recorded speech uses ElevenLabs Scribe v2 batch transcription; live browser speech uses Scribe v2 Realtime with server-minted single-use tokens. Local faster-whisper, ElevenAgents, and TTS are not currently wired into the application.
 
 ## Verification boundary
 

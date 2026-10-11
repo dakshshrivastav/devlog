@@ -20,9 +20,9 @@ export async function runPipeline(
   options: ProcessOptions = {}
 ): Promise<string> {
   if (config.mock) return runMockPipeline(sessionId);
-  if (!config.gemini.apiKey) {
+  if (!config.gemini.available) {
     throw HttpError.unprocessable(
-      'GEMINI_API_KEY is required to synthesize documentation. Add it to .env and restart, or set MOCK=1 to work from fixtures.'
+      'Gemma is required to synthesize documentation. Configure GEMINI_API_KEY or Google Cloud ADC, then restart the server.'
     );
   }
   const { runBatchPipeline } = await import('./batch.js');

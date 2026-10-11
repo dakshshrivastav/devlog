@@ -2,6 +2,7 @@ import type {
   ActiveView,
   CreateSessionRequest,
   GapItem,
+  HealthResponse,
   LiveTokenResponse,
   SearchResponse,
   Session,
@@ -19,6 +20,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  health: () => request<HealthResponse>('/api/health'),
   sessions: () => request<Session[]>('/api/sessions'),
   createSession: (input: CreateSessionRequest) =>
     request<Session>('/api/sessions', {
@@ -26,6 +28,8 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     }),
+  deleteSession: (id: string) =>
+    request<void>(`/api/sessions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   patchSession: (id: string, patch: { name?: string; repoPath?: string | null }) =>
     request<Session>(`/api/sessions/${encodeURIComponent(id)}`, {
       method: 'PATCH',
@@ -66,6 +70,8 @@ export const api = {
     }),
   endLive: (sessionId: string) =>
     request<{ runId: string; sessionId: string; message: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/live/end`, { method: 'POST' }),
+  cancelLive: (sessionId: string) =>
+    request<{ sessionId: string; status: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/live/cancel`, { method: 'POST' }),
   upload: async (sessionId: string, files: { audio: File[]; photos: File[]; notes?: string; keyterms?: string }) => {
     const form = new FormData();
     files.audio.forEach((file) => form.append('audio', file));
@@ -77,10 +83,10 @@ export const api = {
       { method: 'POST', body: form }
     );
   },
-  search: (query: string, sessionId?: string) => {
+  search: (query: string, sessionId?: string, signal?: AbortSignal) => {
     const params = new URLSearchParams({ q: query });
     if (sessionId) params.set('sessionId', sessionId);
-    return request<SearchResponse>(`/api/search?${params}`);
+    return request<SearchResponse>(`/api/search?${params}`, { signal });
   },
   artifact: (sessionId: string, path: string) =>
     fetch(`/api/sessions/${encodeURIComponent(sessionId)}/artifact?path=${encodeURIComponent(path)}`).then(

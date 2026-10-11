@@ -45,7 +45,7 @@ export async function runMockPipeline(sessionId: string): Promise<string> {
   if (bundle.evidence.length === 0) {
     throw HttpError.unprocessable(
       'Mock mode has no provider access, so there is nothing to transcribe or synthesize. ' +
-        'Open the fixture session, or set GEMINI_API_KEY and ELEVENLABS_API_KEY and restart the server.'
+        'Open the fixture session, or configure Gemma auth (Vertex ADC or GEMINI_API_KEY) and, for audio, ELEVENLABS_API_KEY.'
     );
   }
 

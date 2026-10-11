@@ -268,9 +268,22 @@ export function LiveCaptureController({
     }
   };
 
+  const saveDraft = async () => {
+    if (ending) return;
+    setEnding(true);
+    try {
+      await stopRef.current();
+      await api.cancelLive(sessionId);
+      onEnded();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not save the live session draft.');
+      setEnding(false);
+    }
+  };
+
   return (
     <div className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-3xl rounded-xl border border-line-strong bg-surface-1/95 p-3 shadow-2xl backdrop-blur sm:inset-x-6 sm:p-4">
-      <div className="flex items-center gap-3"><span className={`h-2.5 w-2.5 shrink-0 rounded-full ${connected ? 'animate-pulse bg-white' : 'bg-alert'}`} /><div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-xs text-white"><span>{connected ? 'Listening · Scribe v2 Realtime' : starting ? 'Connecting microphone…' : 'Live session ready'}</span><span className="font-mono text-muted">16 kHz PCM</span></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-3"><div className="h-full bg-white transition-all" style={{ width: `${Math.round(meter * 100)}%` }} /></div></div>{!connected && !starting && <button disabled={ending} onClick={() => startRef.current()} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line-strong bg-surface-3 px-3 py-2 text-xs text-white disabled:opacity-50"><span className="material-symbols-outlined text-base">mic</span>{error ? 'Retry microphone' : 'Start microphone'}</button>}<button disabled={ending} onClick={() => void stop()} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-medium text-surface-0 disabled:opacity-50"><span className="material-symbols-outlined text-base">stop_circle</span>{ending ? 'Finishing…' : 'End session'}</button></div>
+      <div className="flex items-center gap-2 sm:gap-3"><span className={`h-2.5 w-2.5 shrink-0 rounded-full ${connected ? 'animate-pulse bg-white' : 'bg-alert'}`} /><div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-xs text-white"><span>{connected ? 'Listening · Scribe v2 Realtime' : starting ? 'Connecting microphone…' : 'Live session ready'}</span><span className="font-mono text-muted">16 kHz PCM</span></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-3"><div className="h-full bg-white transition-all" style={{ width: `${Math.round(meter * 100)}%` }} /></div></div>{!connected && !starting && <button disabled={ending} onClick={() => startRef.current()} aria-label={error ? 'Retry microphone' : 'Start microphone'} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line-strong bg-surface-3 px-2 py-2 text-xs text-white disabled:opacity-50 sm:px-3"><span className="material-symbols-outlined text-base">mic</span><span className="hidden sm:inline">{error ? 'Retry microphone' : 'Start microphone'}</span></button>}<button disabled={ending} onClick={() => void saveDraft()} title="Stop capture and save this session without running final synthesis" aria-label="Save draft" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line-strong bg-surface-3 px-2 py-2 text-xs text-body transition hover:text-white disabled:opacity-50 sm:px-3"><span className="material-symbols-outlined text-base">save</span><span className="hidden sm:inline">Save draft</span></button><button disabled={ending} onClick={() => void stop()} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-2 py-2 text-xs font-medium text-surface-0 disabled:opacity-50 sm:px-3"><span className="material-symbols-outlined text-base">stop_circle</span><span className="hidden sm:inline">{ending ? 'Finishing…' : 'End session'}</span></button></div>
       {(partial || error) && <div className={`mt-3 border-t border-line pt-3 text-xs ${error ? 'text-alert' : 'text-body'}`}>{error ?? <><span className="mr-2 font-mono text-muted">Live speech</span>{partial}</>}</div>}
     </div>
   );

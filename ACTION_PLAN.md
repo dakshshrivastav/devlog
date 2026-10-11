@@ -36,7 +36,7 @@ The product's central constraint is trustworthiness: claims, notes, diagram node
 - **Web framework:** Express 5; pipeline and provider logic stay outside route handlers.
 - **Frontend:** React 19 + Vite 8 + Tailwind v4, preserving the Stitch editorial visual reference.
 - **Shared contract:** strict zod schemas in `shared/` provide the single source of truth for client and server.
-- **Hosted generation:** Gemini Developer API through `@google/genai`, default `gemma-4-26b-a4b-it`; `GEMMA_MODEL` may override it. Cloud MaaS is unselected.
+- **Hosted generation:** `@google/genai` supports Gemini Developer API (`GEMINI_API_KEY`, default `gemma-4-26b-a4b-it`) or Vertex ADC (default `gemma-4-26b-a4b-it-maas` at `global`). ADC project is read from `GOOGLE_CLOUD_PROJECT` or the ADC quota project; `GEMMA_MODEL` may override the mode default. The configured Vertex MaaS model has been live-tested with this project's ADC.
 - **Speech:** Scribe v2 batch transcription for recorded sessions; Scribe v2 Realtime WebSocket for live sessions. The long-lived key stays server-side and live browser connections use single-use tokens.
 - **Live graph:** Gemma updates an append-only idea graph from committed transcript chunks; server history and current graph state are kept separately.
 - **Gap interview:** typed answers are implemented; spoken gap answers remain a follow-up.
@@ -60,9 +60,9 @@ The product's central constraint is trustworthiness: claims, notes, diagram node
 
 ### Google Gemma 4
 
-As checked against the official documentation on 2026-10-10, Google Cloud's managed open-model catalog describes **Gemma 4 26B A4B IT** as the Gemma 4 MaaS model. Its documented model ID is `gemma-4-26b-a4b-it-maas`; the model page marks it experimental and lists text/image input and text output, with no audio or video input. The managed model page lists structured output and function calling as supported. Recheck all of these details when implementing because model availability and limits can change.
+As checked against the official documentation on 2026-10-11, Google Cloud's managed open-model catalog describes **Gemma 4 26B A4B IT** as the Gemma 4 MaaS model. Its documented model ID is `gemma-4-26b-a4b-it-maas`; the model page lists text/image input and text output, with no audio or video input. The global endpoint is required for this model. Live checks verified text/JSON output, image input, hardware graph extraction/Mermaid parsing, Scribe batch and Realtime access, and a synthetic audio-to-docs run. The short synthetic speech run produced no hardware nodes; a clear-text hardware extraction did. Real user recordings, browser microphone quality, account limits, and billing remain unverified.
 
-The Cloud MaaS API guide documents an OpenAI-compatible client path and Application Default Credentials. The Cloud REST `generateContent`/streaming references are also useful API references; select the call path that the specific model's current documentation supports and verify image and schema behavior against that path.
+The Cloud MaaS API guide documents Application Default Credentials. Devlog uses the official `@google/genai` SDK in Vertex mode with `project`, `location: global`, and the MaaS model id. Vertex access is selected automatically when no AI Studio key is set and ADC supplies a project.
 
 The separate Gemini API guide documents `gemma-4-31b-it` and `gemma-4-26b-a4b-it` through Google AI Studio. Do not use these Gemini API model IDs as Cloud MaaS IDs. The Gemma 4 model card describes the broader family, including audio support on smaller variants; that does not make audio supported by the Cloud MaaS 26B model.
 

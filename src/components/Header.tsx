@@ -1,10 +1,11 @@
-import type { ActiveView } from '../../shared/schema';
+import type { ActiveView, HealthResponse } from '../../shared/schema';
 
 interface HeaderProps {
   activeView: ActiveView;
   sessionName: string;
   sessionTime: string;
   status: string;
+  runtime?: HealthResponse;
   onSelectView: (view: ActiveView) => void;
   onOpenSessions: () => void;
   onOpenSearch: () => void;
@@ -29,6 +30,7 @@ export function Header({
   sessionName,
   sessionTime,
   status,
+  runtime,
   onSelectView,
   onOpenSessions,
   onOpenSearch,
@@ -65,6 +67,7 @@ export function Header({
             <button
               key={item.id}
               onClick={() => onSelectView(item.id)}
+              aria-current={activeView === item.id ? 'page' : undefined}
               className={`whitespace-nowrap border-b-2 py-5 font-headline text-xs tracking-tight transition-colors xl:text-sm ${
                 activeView === item.id
                   ? 'border-white font-medium text-white'
@@ -77,6 +80,10 @@ export function Header({
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-[9px] uppercase tracking-wide text-muted xl:inline-flex" title={runtime?.mock ? 'Using fixture-backed mock providers' : 'Provider configuration status'}>
+            <span className={`h-1.5 w-1.5 rounded-full ${runtime?.ok ? 'bg-white' : runtime ? 'bg-alert' : 'animate-pulse bg-muted'}`} />
+            {runtime?.ok ? runtime.mock ? 'Mock runtime' : 'Server online' : runtime ? 'API offline' : 'Checking API'}
+          </span>
           <Action icon="add" label="Add evidence" onClick={onAddCapture} primary />
           <Action icon="search" label="Search" onClick={onOpenSearch} />
           <Action icon="download" label="Export" onClick={onOpenExport} />
@@ -94,6 +101,7 @@ export function Header({
           <button
             key={item.id}
             onClick={() => onSelectView(item.id)}
+            aria-current={activeView === item.id ? 'page' : undefined}
             className={`whitespace-nowrap font-headline text-xs ${activeView === item.id ? 'font-medium text-white' : 'text-muted'}`}
           >
             {item.label}

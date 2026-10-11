@@ -15,7 +15,7 @@ const running = new Map<string, Promise<void>>();
 const DEBOUNCE_MS = 1400;
 
 export function scheduleLiveIdeaSynthesis(sessionId: string): void {
-  if (config.mock || !config.gemini.apiKey) return;
+  if (config.mock || !config.gemini.available) return;
   const old = timers.get(sessionId);
   if (old) clearTimeout(old);
   timers.set(sessionId, setTimeout(() => {
@@ -25,7 +25,7 @@ export function scheduleLiveIdeaSynthesis(sessionId: string): void {
 }
 
 export async function flushLiveIdeaSynthesis(sessionId: string): Promise<void> {
-  if (config.mock || !config.gemini.apiKey) return;
+  if (config.mock || !config.gemini.available) return;
   const timer = timers.get(sessionId);
   if (timer) {
     clearTimeout(timer);

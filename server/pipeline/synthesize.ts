@@ -175,7 +175,7 @@ export const HardwareOutputSchema = z.object({
   measurements: z.array(
     z.object({
       quantity: z.string(),
-      value: z.string(),
+      value: z.string().optional(),
       unit: z.string().optional(),
       instrument: z.string().optional(),
       role: z.enum(['baseline', 'event', 'threshold', 'result']).optional(),
@@ -502,6 +502,10 @@ export function normalizeHardware(
   for (const raw of output.measurements) {
     const { ids, dropped } = resolveSources(raw.sources, index);
     report.droppedCitations.push(...dropped);
+    if (!raw.value?.trim()) {
+      report.droppedStatements.push(`measurement ${raw.quantity} (missing value)`);
+      continue;
+    }
     if (ids.length === 0) {
       report.droppedStatements.push(`measurement ${raw.quantity}`);
       continue;
@@ -647,5 +651,6 @@ export function mergeIdeaGraphs(previous: IdeaGraph, incoming: IdeaGraph): IdeaG
 }
 
 export function providerLabel(): string {
-  return `Gemini Developer API · ${config.gemini.model}`;
+  const provider = config.gemini.authMode === 'vertex-adc' ? 'Vertex AI ADC' : 'Gemini Developer API';
+  return `${provider} · ${config.gemini.model}`;
 }

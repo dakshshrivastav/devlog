@@ -1,6 +1,6 @@
 # ElevenLabs Scribe v2 Realtime — browser microphone path
 
-Checked **2026-10-11** against the official WebSocket reference and client-side streaming guide. This describes the path Devlog implements; a live account/microphone smoke test is still required after adding provider keys.
+Checked **2026-10-11** against the official WebSocket reference and client-side streaming guide. A live smoke test minted a token and received a committed transcript from a short synthetic PCM clip. The browser microphone UI itself has not yet been smoke-tested.
 
 ## Connection
 

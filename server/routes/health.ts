@@ -8,8 +8,9 @@ healthRouter.get('/', (_req, res) => {
     ok: true,
     version: config.version,
     mock: config.mock,
+    geminiAuth: config.gemini.authMode,
     providers: {
-      gemini: Boolean(config.gemini.apiKey),
+      gemini: config.gemini.available,
       elevenlabs: Boolean(config.elevenlabs.apiKey),
     },
     dataDir: config.dataDir,

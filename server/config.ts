@@ -5,7 +5,8 @@
  * only short-lived single-use tokens minted by `/live/token`.
  */
 import 'dotenv/config';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,9 +35,30 @@ function intFrom(name: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/** Read only the non-secret project/quota id from the standard ADC file. */
+function adcProject(): string | null {
+  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()
+    || path.join(os.homedir(), '.config', 'gcloud', 'application_default_credentials.json');
+  if (!existsSync(credentialsPath)) return null;
+  try {
+    const credentials = JSON.parse(readFileSync(credentialsPath, 'utf8')) as {
+      quota_project_id?: string;
+      project_id?: string;
+    };
+    return credentials.quota_project_id?.trim() || credentials.project_id?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 export interface ProviderConfig {
   gemini: {
     apiKey: string | null;
+    vertexai: boolean;
+    project: string | null;
+    location: string;
+    authMode: 'developer-api' | 'vertex-adc' | 'missing';
+    available: boolean;
     model: string;
   };
   elevenlabs: {
@@ -72,6 +94,12 @@ export interface Config extends ProviderConfig {
 function build(): Config {
   const geminiKey = process.env.GEMINI_API_KEY?.trim() || null;
   const elevenLabsKey = process.env.ELEVENLABS_API_KEY?.trim() || null;
+  const project = process.env.GOOGLE_CLOUD_PROJECT?.trim()
+    || process.env.GCLOUD_PROJECT?.trim()
+    || adcProject();
+  const vertexai = !geminiKey && Boolean(project);
+  const authMode = geminiKey ? 'developer-api' : vertexai ? 'vertex-adc' : 'missing';
+  const geminiAvailable = Boolean(geminiKey || (vertexai && project));
   const mockForced = process.env.MOCK === '1' || process.env.MOCK === 'true';
   const dataDir = abs(process.env.DATA_DIR || './data');
 
@@ -84,7 +112,13 @@ function build(): Config {
     fixturesDir: abs('./fixtures'),
     gemini: {
       apiKey: geminiKey,
-      model: process.env.GEMMA_MODEL?.trim() || 'gemma-4-26b-a4b-it',
+      vertexai,
+      project,
+      location: process.env.GOOGLE_CLOUD_LOCATION?.trim() || 'global',
+      authMode,
+      available: geminiAvailable,
+      model: process.env.GEMMA_MODEL?.trim()
+        || (vertexai ? 'gemma-4-26b-a4b-it-maas' : 'gemma-4-26b-a4b-it'),
     },
     elevenlabs: {
       apiKey: elevenLabsKey,
@@ -93,7 +127,7 @@ function build(): Config {
       realtimeUrl: 'wss://api.elevenlabs.io/v1/speech-to-text/realtime',
       tokenUrl: 'https://api.elevenlabs.io/v1/single-use-token/realtime_scribe',
     },
-    mock: mockForced || (!geminiKey && !elevenLabsKey),
+    mock: mockForced || (!geminiAvailable && !elevenLabsKey),
     mockForced,
     limits: {
       maxPhotosPerCall: intFrom('MAX_PHOTOS_PER_CALL', 8),
@@ -105,7 +139,7 @@ function build(): Config {
 
 export const config = build();
 
-/** True when both keys needed for a real batch run are present. */
+/** True when Gemma auth and ElevenLabs batch transcription are both available. */
 export function canRunBatch(): boolean {
-  return Boolean(config.gemini.apiKey && config.elevenlabs.apiKey);
+  return Boolean(config.gemini.available && config.elevenlabs.apiKey);
 }

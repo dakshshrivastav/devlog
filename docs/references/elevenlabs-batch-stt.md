@@ -10,7 +10,7 @@
 - The synchronous response contains transcript text and word entries with `text`, optional `start`/`end`, type, and optional speaker/channel fields. Devlog stores the complete returned JSON first, then normalizes `words` into the timeline. Timestamps are preserved as audio-relative offsets, not wall-clock times.
 - HTTP validation/authentication errors are surfaced as action-oriented errors; Devlog does not retry permanent request failures.
 
-No live request has been made. Account limits, audio acceptance for every supported extension, current billing, and SDK behavior are not independently smoke-tested. The code uses the documented REST multipart route through `httpx`, avoiding an unverified SDK model serializer.
+Live smoke test on 2026-10-11: this app's configured key transcribed a short locally synthesized WAV into two word-timed segments, and a full test session returned four segments. This verifies the real multipart request and the transcript shape used by Devlog, but not every supported audio extension, account limits, or billing details.
 
 ## Canonical references
 

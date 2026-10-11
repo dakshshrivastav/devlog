@@ -30,6 +30,11 @@ export default function App() {
   const [liveSessionId, setLiveSessionId] = useState<string | null>(null);
 
   const sessionsQuery = useQuery({ queryKey: ['sessions'], queryFn: api.sessions });
+  const healthQuery = useQuery({
+    queryKey: ['health'],
+    queryFn: api.health,
+    refetchInterval: 30_000,
+  });
   const sessions = sessionsQuery.data ?? [];
   const selected = sessions.find((session) => session.id === sessionId);
 
@@ -112,6 +117,18 @@ export default function App() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deleteSession(id),
+    onSuccess: (_result, id) => {
+      queryClient.setQueryData<Session[]>(['sessions'], (prev = []) => prev.filter((session) => session.id !== id));
+      queryClient.removeQueries({ queryKey: BUNDLE_KEY(id) });
+      if (sessionId === id) {
+        setSessionId('');
+        setView('sessions');
+      }
+    },
+  });
+
   const process = useCallback(async (synthesizeOnly = false) => {
     if (!sessionId) return;
     await api.process(sessionId, synthesizeOnly);
@@ -184,7 +201,12 @@ export default function App() {
           sessions={sessions}
           loading={sessionsQuery.isLoading}
           error={libraryError}
+          health={healthQuery.data}
+          healthError={healthQuery.error instanceof Error ? healthQuery.error.message : undefined}
+          healthLoading={healthQuery.isLoading}
           onOpen={openSession}
+          onRetry={() => { void sessionsQuery.refetch(); void healthQuery.refetch(); }}
+          onDelete={(id) => deleteMutation.mutateAsync(id)}
           onCreate={async (name, mode) => { await createMutation.mutateAsync({ name, mode }); }}
         />
       ) : (
@@ -194,6 +216,7 @@ export default function App() {
             sessionName={bundle?.session.name ?? selected?.name ?? 'Session'}
             sessionTime={selectedDuration}
             status={bundle?.session.status ?? selected?.status ?? 'loading'}
+            runtime={healthQuery.data}
             onSelectView={setView}
             onOpenSessions={() => setView('sessions')}
             onOpenSearch={() => setSearchOpen(true)}

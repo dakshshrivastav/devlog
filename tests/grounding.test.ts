@@ -47,6 +47,22 @@ describe('grounding and factual claim validation', () => {
     expect(report.droppedStatements.some((text) => text.includes('invented'))).toBe(true);
   });
 
+  it('drops an incomplete measurement without discarding the sourced hardware graph', () => {
+    const report = { droppedCitations: [] as string[], droppedStatements: [] as string[] };
+    const normalized = normalizeHardware(
+      {
+        nodes: [{ id: 'mcu', name: 'ESP32', kind: 'mcu', sources: ['voice 14:02'] }],
+        edges: [],
+        measurements: [{ quantity: 'USB rail', sources: ['voice 14:02'] }],
+      },
+      buildTagIndex([evidence]),
+      report
+    );
+    expect(normalized.nodes.map((node) => node.id)).toEqual(['mcu']);
+    expect(normalized.measurements).toEqual([]);
+    expect(report.droppedStatements).toContain('measurement USB rail (missing value)');
+  });
+
   it('rejects first-person observer notes and unsupported motives', () => {
     const note: ObservationNote = {
       id: 'obs-1',

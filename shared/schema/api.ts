@@ -245,6 +245,7 @@ export const HealthResponseSchema = z.object({
   ok: z.boolean(),
   version: z.string(),
   mock: z.boolean(),
+  geminiAuth: z.enum(['developer-api', 'vertex-adc', 'missing']),
   providers: z.object({
     gemini: z.boolean(),
     elevenlabs: z.boolean(),

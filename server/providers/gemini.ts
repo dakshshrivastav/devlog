@@ -1,9 +1,8 @@
 /**
- * Gemini Developer API provider.
+ * Gemini Developer API / Vertex AI provider.
  *
- * Hosted Gemma 4 via the official `@google/genai` SDK. Model id comes from
- * `GEMMA_MODEL` (default `gemma-4-26b-a4b-it`), recorded in
- * docs/references/gemma4-gemini-api.md.
+ * Supports AI Studio API keys and Vertex AI ADC. ADC defaults to the global
+ * Cloud MaaS Gemma 4 model; `GEMMA_MODEL` can override the mode-specific id.
  *
  * Structured output is not assumed for this model. `generateJson` requests JSON
  * in the prompt, extracts it defensively, and validates with the caller's zod
@@ -33,13 +32,23 @@ let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
   const apiKey = config.gemini.apiKey;
-  if (!apiKey) {
-    throw HttpError.unprocessable(
-      'GEMINI_API_KEY is not set. Add it to .env, or run with MOCK=1 to work from fixtures.'
-    );
+  if (apiKey) {
+    if (!client) client = new GoogleGenAI({ apiKey });
+    return client;
   }
-  if (!client) client = new GoogleGenAI({ apiKey });
-  return client;
+  if (config.gemini.vertexai && config.gemini.project) {
+    if (!client) {
+      client = new GoogleGenAI({
+        vertexai: true,
+        project: config.gemini.project,
+        location: config.gemini.location,
+      });
+    }
+    return client;
+  }
+  throw HttpError.unprocessable(
+    'Gemma is not configured. Set GEMINI_API_KEY or configure Google Cloud ADC; set GOOGLE_CLOUD_PROJECT if the project cannot be inferred.'
+  );
 }
 
 const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -63,6 +72,16 @@ function base64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('base64');
 }
 
+function isTransientProviderError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  const status = error && typeof error === 'object' && 'status' in error
+    ? Number((error as { status?: unknown }).status)
+    : 0;
+  return status === 429 || status >= 500 || /RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ECONNRESET|ETIMEDOUT|EAI_AGAIN/i.test(message);
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function call(prompt: string, images: readonly ImageInput[], options: GenerateOptions): Promise<string> {
   const ai = getClient();
   const prepared = prepareImages(images);
@@ -80,21 +99,29 @@ async function call(prompt: string, images: readonly ImageInput[], options: Gene
     });
   }
 
-  let response;
-  try {
-    response = await ai.models.generateContent({
-      model: config.gemini.model,
-      contents: [{ role: 'user', parts }],
-      config: {
-        temperature: options.temperature ?? 0.2,
-        maxOutputTokens: options.maxOutputTokens ?? 8192,
-        ...(options.systemInstruction ? { systemInstruction: options.systemInstruction } : {}),
-      },
-    });
-  } catch (err) {
-    throw HttpError.provider(
-      `Gemini request failed for model ${config.gemini.model}: ${(err as Error).message}`
-    );
+  let response: Awaited<ReturnType<typeof ai.models.generateContent>> | undefined;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      response = await ai.models.generateContent({
+        model: config.gemini.model,
+        contents: [{ role: 'user', parts }],
+        config: {
+          temperature: options.temperature ?? 0.2,
+          maxOutputTokens: options.maxOutputTokens ?? 8192,
+          ...(options.systemInstruction ? { systemInstruction: options.systemInstruction } : {}),
+        },
+      });
+      break;
+    } catch (err) {
+      lastError = err;
+      if (attempt === 2 || !isTransientProviderError(err)) break;
+      await delay(500 * 2 ** attempt);
+    }
+  }
+  if (!response) {
+    const message = lastError instanceof Error ? lastError.message : String(lastError ?? 'unknown error');
+    throw HttpError.provider(`Gemini request failed for model ${config.gemini.model}: ${message}`);
   }
 
   const text = response.text ?? '';

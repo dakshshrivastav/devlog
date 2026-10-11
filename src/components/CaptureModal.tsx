@@ -28,7 +28,7 @@ export function CaptureModal({
     setBusy(true);
     setError(null);
     try {
-      if (audioRef.current?.files?.length || photoRef.current?.files?.length || notes.trim()) {
+      if (audioRef.current?.files?.length || photoRef.current?.files?.length || notes.trim() || keyterms.trim()) {
         await api.upload(sessionId, {
           audio: [...(audioRef.current?.files ?? [])],
           photos: [...(photoRef.current?.files ?? [])],

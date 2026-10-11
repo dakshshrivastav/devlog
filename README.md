@@ -16,14 +16,25 @@ Requires Node.js 22 or newer.
 
 ```bash
 npm install
-cp .env.example .env
-# Add GEMINI_API_KEY and ELEVENLABS_API_KEY to .env for real processing.
+# Create the local config only if you don't already have one (preserves existing keys).
+test -f .env || cp .env.example .env
+# Google Cloud ADC is auto-detected for Gemma. Put ELEVENLABS_API_KEY in ignored .env for audio/live capture.
+# If ADC is not configured yet: gcloud auth application-default login
 npm run dev
 ```
 
 Open <http://localhost:3000>. The Vite frontend proxies `/api` to the local Express server on port 8787. The server binds locally by default unless configured otherwise.
 
-With no provider keys, Devlog runs in mock mode and opens the included ESP32 relay fixture. It exercises the real session API, artifacts, diagrams, gap write-back and exports without provider calls. `MOCK=1` forces this mode. Recorded transcription needs ElevenLabs and documentation synthesis needs Gemini; live transcription needs ElevenLabs, while live idea updates also use Gemini. The app never sends long-lived keys to the browser.
+With neither Google auth nor an ElevenLabs key, Devlog runs in mock mode and opens the included ESP32 relay fixture. It exercises the real session API, artifacts, diagrams, gap write-back and exports without provider calls. `MOCK=1` forces this mode. Documentation synthesis uses Gemma through Vertex ADC by default on this setup (or AI Studio with `GEMINI_API_KEY`). Recorded audio and live transcription need ElevenLabs; typed notes, photos, and Git evidence can be synthesized with Gemma alone. The app never sends long-lived credentials to the browser.
+
+### First real session
+
+1. Open <http://localhost:3000> and create a **Recorded session**.
+2. Add a short voice recording, optional bench photos/notes/keyterms, and optionally a repository path.
+3. Choose **Upload and synthesize**. Scribe transcribes audio; Gemma turns the transcript and other evidence into documentation and graphs.
+4. If you only have notes, photos, or Git history, skip audio; Gemma can still synthesize those inputs without an ElevenLabs key.
+
+For live capture, create a **Live bench session**, choose **Add evidence → Prepare live session**, then allow microphone access and start capture.
 
 ### Environment
 
@@ -31,9 +42,11 @@ Copy `.env.example` to `.env` and set:
 
 | Variable | Purpose |
 | --- | --- |
-| `GEMINI_API_KEY` | Gemma synthesis via the Gemini Developer API |
+| `GEMINI_API_KEY` | Optional AI Studio auth. Alternatively, use Vertex ADC from `gcloud auth application-default login` |
+| `GOOGLE_CLOUD_PROJECT` | Optional Vertex project override; otherwise read from ADC quota project |
+| `GOOGLE_CLOUD_LOCATION` | Vertex location; defaults to `global` for Gemma MaaS |
 | `ELEVENLABS_API_KEY` | Scribe v2 batch transcription and minting single-use realtime tokens |
-| `GEMMA_MODEL` | Optional model override; default `gemma-4-26b-a4b-it` |
+| `GEMMA_MODEL` | Optional model override; defaults to `gemma-4-26b-a4b-it-maas` on Vertex ADC |
 | `DATA_DIR` | Session data directory; default `./data` (gitignored) |
 | `PORT` | Express API port; default `8787` |
 | `MOCK` | Set `1` to serve fixtures and skip provider requests |
@@ -59,7 +72,7 @@ npm run build      # typecheck and production Vite build
 npm run fixture    # regenerate fixtures/session-01 from its source builder
 ```
 
-Normal tests do not call paid APIs. The API details and provider limits are recorded under [`docs/references/`](docs/references/README.md). Real account access, billing, current quotas, and end-to-end microphone/provider quality still require a configured live smoke test.
+Normal tests do not call paid APIs. The ADC/Gemma text-and-image path, Scribe batch transcription, and a Realtime Scribe WebSocket clip have been smoke-tested. Browser microphone permission/capture, real bench recordings, account quotas, and billing still need to be checked in your environment. Provider details are recorded under [`docs/references/`](docs/references/README.md).
 
 ## Privacy and trust
 

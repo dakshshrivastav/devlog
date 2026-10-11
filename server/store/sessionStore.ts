@@ -257,8 +257,13 @@ async function listRealSessionIds(): Promise<string[]> {
 }
 
 export async function listSessions(): Promise<Session[]> {
-  const realIds = await listRealSessionIds();
-  const fixtureIds = await listFixtureIds();
+  const availableFixtureIds = await listFixtureIds();
+  const fixtureSet = new Set(availableFixtureIds);
+  // Fixtures are a no-key demo path, not user sessions. Hide them once the
+  // application is running against configured providers, even if a fixture
+  // was materialized into DATA_DIR during an earlier mock run.
+  const realIds = (await listRealSessionIds()).filter((id) => config.mock || !fixtureSet.has(id));
+  const fixtureIds = config.mock ? availableFixtureIds : [];
   const seen = new Set(realIds);
   const all = [...realIds, ...fixtureIds.filter((id) => !seen.has(id))];
 

@@ -9,8 +9,15 @@ which remains the source for provider research and acceptance checks C1–C18.
 - **Foundation and fixture-backed web app are implemented.** The nine workspace surfaces
   render session data; session creation/library, uploads, gap write-back, search, SSE updates,
   Mermaid SVG/source downloads and ZIP export use the local API.
-- **Provider adapters are implemented but not live-smoke-tested here.** Batch Scribe v2,
-  Gemini synthesis, EXIF and Git ingestion are wired. Add the keys to `.env` to use them.
+- **Vertex Gemma MaaS and ElevenLabs are live-smoke-tested.** ADC inferred the quota project;
+  `gemma-4-26b-a4b-it-maas` at `global` validated structured JSON, accepted an image, and
+  produced a sourced hardware graph that parsed as Mermaid. Scribe v2 batch returned four
+  transcript segments from synthetic speech; a Realtime WebSocket also returned a committed
+  transcript. A full audio-to-docs smoke completed with a generated README, idea graph,
+  chronology, gaps and diagrams. That short synthetic transcript yielded no hardware nodes;
+  a separate clear-note hardware extraction produced five nodes and four edges. An incomplete
+  optional measurement no longer invalidates the whole hardware graph. Browser microphone UX
+  and a user-recorded capture remain unverified.
 - **Realtime transport is wired.** The server mints one-use Scribe tokens; browser AudioWorklet
   converts mic input to 16 kHz PCM; raw provider events are appended before transcript
   processing. Live idea synthesis is debounced and appends graph history when Gemini is
@@ -29,10 +36,10 @@ Two decisions in ACTION_PLAN §3 are amended here, deliberately:
 | Language: Python, FastAPI | **Node + Express + TypeScript** | One language across the stack; the session/evidence/gap model is defined once in `shared/` and typed on both sides. The repo scaffold was already Node. |
 | Gap interview: text questions for v1 | Typed and spoken answers | Spoken answers use batch Scribe and become their own voice evidence item. |
 
-Everything else in §3 stands: Gemini Developer API with `gemma-4-26b-a4b-it`, ElevenLabs
-Scribe v2 for recorded audio, Scribe v2 Realtime for live capture, filesystem output
-outside the source tree, restricted Mermaid subset, MIT license, `.gitignore` before any
-`git add`.
+Provider auth now supports Gemini Developer API with `gemma-4-26b-a4b-it` or Vertex ADC with
+`gemma-4-26b-a4b-it-maas` at `global`. ElevenLabs Scribe v2 for recorded audio, Scribe v2
+Realtime for live capture, filesystem output outside the source tree, restricted Mermaid
+subset, MIT license, and `.gitignore` before any `git add` remain in effect.
 
 ---
 
@@ -183,9 +190,11 @@ GET    /api/search?q=&sessionId=         real corpus search
 ### 2.3 Environment
 
 ```
-GEMINI_API_KEY        required for synthesis
+GEMINI_API_KEY        optional AI Studio auth; alternatively Vertex ADC is auto-detected
+GOOGLE_CLOUD_PROJECT  optional Vertex project override; otherwise ADC quota project is used
+GOOGLE_CLOUD_LOCATION default global for the Gemma MaaS endpoint
 ELEVENLABS_API_KEY    required for STT and token minting
-GEMMA_MODEL           default gemma-4-26b-a4b-it
+GEMMA_MODEL           mode-specific default: AI Studio id or Vertex MaaS id
 DATA_DIR              default ./data
 PORT                  server port, default 8787
 MOCK                  1 = serve fixtures, no provider calls, no keys needed
