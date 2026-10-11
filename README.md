@@ -2,6 +2,8 @@
 
 **Talk through your build. Keep the evidence.** Devlog turns voice, bench photos, notes and Git history into source-backed hardware documentation.
 
+demo - https://drive.google.com/file/d/1U5PuZf0vizUwSaiSZ1w_ml44onEIjE40/view?usp=sharing
+
 The local web app has a session library and nine workspace views. They render three separate models from one evidence store:
 
 - **Living Map** — the chronological build log across each selected session.
